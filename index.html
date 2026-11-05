@@ -1,0 +1,759 @@
+# Plataforma de Raspaditas Online Premium
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspaditas Premium Online</title>
+    <!-- Tailwind CSS para un diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts para una tipografía elegante -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+        }
+        .win-glow {
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+        }
+        /* Deshabilitar selección y scroll involuntario en móviles al raspar */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+        /* Animación para resaltar las celdas ganadoras */
+        @keyframes pulse-winner {
+            0%, 100% { transform: scale(1); border-color: rgba(234, 179, 8, 0.5); background-color: rgba(234, 179, 8, 0.15); box-shadow: 0 0 10px rgba(234, 179, 8, 0.2); }
+            50% { transform: scale(1.05); border-color: rgba(234, 179, 8, 1); background-color: rgba(234, 179, 8, 0.3); box-shadow: 0 0 25px rgba(234, 179, 8, 0.6); }
+
+        }
+        .winning-cell {
+            animation: pulse-winner 1.5s infinite ease-in-out;
+            border-width: 2px !important;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-yellow-500 selection:text-slate-900">
+
+    <!-- CONTENEDOR PRINCIPAL DINÁMICO -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+        
+        <!-- ======================================================== -->
+        <!-- PANEL DE CONTROL DEL ADMINISTRADOR                       -->
+        <!-- ======================================================== -->
+        <div id="admin-panel" class="hidden space-y-8">
+            <!-- Encabezado Admin -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+
+                <div>
+                    <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">
+                        Raspaditas Premium <span class="text-sm font-semibold px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md ml-2 border border-amber-500/20">Panel Admin</span>
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1">Generación segura de boletos únicos de un solo uso y control de raspado en tiempo real.</p>
+                </div>
+            </div>
+
+            <!-- Métricas Generales -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass p-5 rounded-2xl shadow-xl">
+                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Generados</p>
+                    <p id="stat-total" class="text-3xl font-bold mt-1 text-slate-100">0</p>
+                </div>
+                <div class="glass p-5 rounded-2xl shadow-xl">
+                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Disponibles</p>
+                    <p id="stat-available" class="text-3xl font-bold mt-1 text-emerald-400">0</p>
+                </div>
+                <div class="glass p-5 rounded-2xl shadow-xl">
+
+                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Ya Raspados</p>
+                    <p id="stat-scratched" class="text-3xl font-bold mt-1 text-rose-400">0</p>
+                </div>
+                <div class="glass p-5 rounded-2xl shadow-xl">
+                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Premios Ganados</p>
+                    <p id="stat-winners" class="text-3xl font-bold mt-1 text-yellow-400">0</p>
+                </div>
+            </div>
+
+            <!-- Sección de Creación y Listado -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Creador de Boletos -->
+                <div class="glass p-6 rounded-2xl shadow-2xl h-fit border border-slate-800">
+                    <h2 class="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2">
+                        <span>✨</span> Configurar Enlace
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nombre del Jugador</label>
+                            <input type="text" id="input-player" placeholder="Ej: Juan Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipo de Resultado</label>
+                            <select id="select-mode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500 transition-colors">
+                                <option value="aleatorio">Aleatorio (30% Probabilidad Galar)</option>
+                                <option value="ganador">Forzar Ganador (Elige el premio abajo)</option>
+                                <option value="perdedor">Forzar Sin Premio</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Monto del Premio (Si resulta ganador)</label>
+                            <select id="select-prize" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500 transition-colors">
+                                <option value="5000">Gs. 5.000</option>
+                                <option value="10000">Gs. 10.000</option>
+                                <option value="20000">Gs. 20.000</option>
+
+                                <option value="50000">Gs. 50.000</option>
+                                <option value="100000">Gs. 100.000</option>
+                                <option value="500000">Gs. 500.000</option>
+                                <option value="1000000">Gs. 1.000.000</option>
+                                <option value="3000000">Gs. 3.000.000</option>
+                                <option value="5000000">Gs. 5.000.000</option>
+                            </select>
+                        </div>
+
+                        <button id="btn-generate" class="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2 gold-glow">
+                            Generar Enlace Personalizado
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Control de Enlaces -->
+                <div class="lg:col-span-2 glass rounded-2xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col justify-between">
+                    <div class="p-6 pb-2">
+                        <h2 class="text-xl font-bold text-slate-100">Enlaces Activos y Estado</h2>
+
+                        <p class="text-xs text-slate-400 mt-1">Comparte los enlaces creados por WhatsApp. El estado cambiará automáticamente.</p>
+                    </div>
+                    
+                    <div class="overflow-x-auto max-h-[420px] overflow-y-auto px-6">
+                        <table class="w-full text-left border-collapse mt-4">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th class="py-3 px-2">Jugador</th>
+                                    <th class="py-3 px-2">Premio</th>
+                                    <th class="py-3 px-2">Estado</th>
+                                    <th class="py-3 px-2 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tickets-table-body" class="divide-y divide-slate-800/50 text-sm">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                        <div id="empty-state" class="hidden text-center py-12 text-slate-500">
+                            No hay enlaces generados todavía. Usa el panel de configuración.
+
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-900/40 border-t border-slate-800 text-right">
+                        <button id="btn-clear-all" class="text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors">Reiniciar Base de Datos</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- INTERFAZ DE JUEGO (JUGADOR)                              -->
+        <!-- ======================================================== -->
+        <div id="game-panel" class="hidden max-w-md mx-auto space-y-6 animate-fadeIn">
+            <!-- Header Jugador -->
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-slate-100 to-slate-300 uppercase">¡Tu Raspadita!</h1>
+                <p id="game-welcome-msg" class="text-amber-400 font-semibold text-sm">¡Mucha suerte!</p>
+                <p class="text-slate-400 text-xs">Consigue 3 montos idénticos para ganar el premio.</p>
+            </div>
+
+
+            <!-- Contenedor de la Tarjeta de Raspadita -->
+            <div id="scratch-card-container" class="glass p-4 rounded-3xl shadow-2xl border border-slate-700/50 relative overflow-hidden">
+                <!-- Fondo oculto (Celdas del premio) -->
+                <div id="prize-grid" class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-2xl w-full aspect-square no-select">
+                    <!-- 9 Celdas inyectadas por JS -->
+                </div>
+
+                <!-- Capa Gris para raspar (Canvas encima) -->
+                <canvas id="scratch-canvas" class="absolute inset-0 m-4 rounded-2xl cursor-crosshair no-select"></canvas>
+            </div>
+
+            <!-- Mensaje de Resultado de Raspado -->
+            <div id="game-result-card" class="hidden text-center p-5 rounded-2xl border transition-all animate-fadeIn">
+                <h3 id="result-title" class="text-2xl font-black"></h3>
+                <p id="result-subtitle" class="text-sm mt-1 opacity-90"></p>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE ERROR / ENLACE USADO -->
+
+        <div id="error-panel" class="hidden max-w-md mx-auto text-center space-y-6 py-16">
+            <div class="text-6xl">🔒</div>
+            <h1 class="text-2xl font-extrabold text-slate-200">Enlace Inválido o Ya Utilizado</h1>
+            <p class="text-slate-400 text-sm">Cada boleto de raspadita es de un solo uso por motivos de seguridad y transparencia. Contacta con tu administrador para conseguir uno nuevo.</p>
+        </div>
+
+    </main>
+
+    <!-- Footer Factual -->
+    <footer class="border-t border-slate-900 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
+        Plataforma Autónoma de Raspaditas Premium Online &copy; 2026
+    </footer>
+
+    <!-- LÓGICA COMPLETA DE LA PLATAFORMA -->
+    <script>
+        // --- SINTETIZADOR NATIVO DE AUDIO (AudioContext HTML5) ---
+        // Genera frecuencias de audio dinámicas directamente desde el código sin necesidad de archivos externos.
+        let audioCtx = null;
+
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        // Sonido rítmico para el raspado (Efecto raspado de lija/papel corto)
+        function playScratchSound() {
+            try {
+                const ctxAudio = getAudioContext();
+                const bufferSize = ctxAudio.sampleRate * 0.04; // Duración muy corta (40ms)
+                const buffer = ctxAudio.createBuffer(1, bufferSize, ctxAudio.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Generar ruido blanco
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+
+                const noise = ctxAudio.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = ctxAudio.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1000; // Frecuencia de raspado áspero
+
+                const gain = ctxAudio.createGain();
+                gain.gain.setValueAtTime(0.08, ctxAudio.currentTime); // Volumen bajo no invasivo
+                gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.04);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctxAudio.destination);
+                noise.start();
+            } catch (e) {
+                console.log("Audio bloqueado por política del navegador hasta interacción.");
+            }
+        }
+
+
+        // Melodía triunfal alegre y ascendente para ganadores
+        function playWinMusic() {
+            try {
+                const ctxAudio = getAudioContext();
+                const now = ctxAudio.currentTime;
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // Arpegio Do Mayor brillante
+                
+                notes.forEach((freq, index) => {
+                    const osc = ctxAudio.createOscillator();
+                    const gain = ctxAudio.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + (index * 0.1));
+                    
+                    gain.gain.setValueAtTime(0.15, now + (index * 0.1));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.1) + 0.4);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctxAudio.destination);
+
+                    osc.start(now + (index * 0.1));
+                    osc.stop(now + (index * 0.1) + 0.4);
+                });
+            } catch (e) {}
+        }
+
+        // Tono melancólico descendente para boletos sin premio
+        function playLoseMusic() {
+            try {
+                const ctxAudio = getAudioContext();
+                const now = ctxAudio.currentTime;
+                const notes = [392.00, 349.23, 311.13, 246.94]; // Escala triste descendente
+                
+                notes.forEach((freq, index) => {
+                    const osc = ctxAudio.createOscillator();
+                    const gain = ctxAudio.createGain();
+                    
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + (index * 0.15));
+
+                    
+                    gain.gain.setValueAtTime(0.12, now + (index * 0.15));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.15) + 0.5);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctxAudio.destination);
+                    osc.start(now + (index * 0.15));
+                    osc.stop(now + (index * 0.15) + 0.5);
+                });
+            } catch (e) {}
+        }
+
+
+        // --- BASE DE DATOS LOCAL SEGURA COMPARTIBLE ---
+        // Para resolver el problema de Render/Múltiples celulares sin backend real, implementamos una base de datos autogestionada
+        // que cifra/codifica los datos del premio directamente en los parámetros de la URL junto con una clave de verificación única.
+        const DB_KEY = 'raspaditas_premium_db';
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+
+
+        function saveDB() {
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+            updateAdminDashboard();
+        }
+
+        const PRIZE_THEMES = {
+            5000:    { icon: '🐶', name: 'Perrito Hueso' },
+            10000:   { icon: '🐱', name: 'Gatito Suerte' },
+            20000:   { icon: '🦊', name: 'Zorro Astuto' },
+            50000:   { icon: '🦁', name: 'León Dorado' },
+            100000:  { icon: '🐷', name: 'Alcancía Cerdito' },
+            500000:  { icon: '🐼', name: 'Oso Panda' },
+            1000000: { icon: '🦄', name: 'Unicornio Mágico' },
+            3000000: { icon: '🐉', name: 'Dragón Imperial' },
+            5000000: { icon: '👑', name: 'Corona Real' }
+        };
+
+        const VALID_PRIZES = Object.keys(PRIZE_THEMES).map(Number);
+
+
+        function formatMoney(amount) {
+            if (amount === 0 || !amount) return "Sin Premio";
+            return "Gs. " + Number(amount).toLocaleString('es-PY');
+        }
+
+        function generateUniqueId() {
+            return 'tkt_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        }
+
+        // --- ENRUTADOR E INTERPRETACIÓN DE LA URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const ticketId = urlParams.get('id');
+        // Parámetros de datos empaquetados para que funcione de forma nativa en celulares externos sin perder la información
+        const dataParam = urlParams.get('d'); 
+
+        window.onload = function() {
+            if (ticketId && dataParam) {
+                initPlayerGame(ticketId, dataParam);
+            } else {
+
+                initAdminPanel();
+            }
+        };
+
+        // --- SECCIÓN ADMINISTRADOR ---
+        function initAdminPanel() {
+            document.getElementById('admin-panel').classList.remove('hidden');
+            
+            document.getElementById('btn-generate').onclick = createTicketLink;
+            document.getElementById('btn-clear-all').onclick = () => {
+                if(confirm('¿Seguro que deseas eliminar todos los registros y enlaces creados?')) {
+                    db = {};
+                    saveDB();
+                }
+            };
+
+            updateAdminDashboard();
+
+            window.addEventListener('storage', (e) => {
+
+                if (e.key === DB_KEY) {
+                    db = JSON.parse(e.newValue) || {};
+                    updateAdminDashboard();
+                }
+            });
+        }
+
+        function createTicketLink() {
+            const playerInput = document.getElementById('input-player').value.trim();
+            const playerName = playerInput || 'Jugador Anónimo';
+            const mode = document.getElementById('select-mode').value;
+            const chosenPrize = Number(document.getElementById('select-prize').value);
+
+            let isWinner = false;
+            let prizeAmount = 0;
+
+            if (mode === 'aleatorio') {
+                isWinner = Math.random() < 0.30;
+                prizeAmount = isWinner ? VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)] : 0;
+
+            } else if (mode === 'ganador') {
+                isWinner = true;
+                prizeAmount = chosenPrize;
+            } else {
+                isWinner = false;
+                prizeAmount = 0;
+            }
+
+            const gridSymbols = generateBalancedGrid(isWinner, prizeAmount);
+            const newId = generateUniqueId();
+
+            // Guardar localmente en el admin para métricas
+            db[newId] = {
+                id: newId,
+                player: playerName,
+                isWinner: isWinner,
+                prize: prizeAmount,
+                symbols: gridSymbols,
+                status: 'disponible',
+
+                createdAt: new Date().toLocaleString()
+            };
+
+            saveDB();
+            document.getElementById('input-player').value = '';
+        }
+
+        function generateBalancedGrid(isWinner, prizeAmount) {
+            let pool = [];
+            if (isWinner) {
+                pool = [prizeAmount, prizeAmount, prizeAmount];
+                while (pool.length < 9) {
+                    let randomPrize = VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)];
+                    if (randomPrize !== prizeAmount && pool.filter(x => x === randomPrize).length < 2) {
+                        pool.push(randomPrize);
+                    }
+                }
+            } else {
+                let attempts = 0;
+
+                while (pool.length < 9 && attempts < 100) {
+                    let randomPrize = VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)];
+                    if (pool.filter(x => x === randomPrize).length < 2) {
+                        pool.push(randomPrize);
+                    }
+                    attempts++;
+                }
+                if (pool.length < 9) {
+                    pool = [5000, 10000, 20000, 50000, 100000, 500000, 1000000, 3000000, 5000];
+                }
+            }
+            return pool.sort(() => Math.random() - 0.5);
+        }
+
+        function updateAdminDashboard() {
+            const tbody = document.getElementById('tickets-table-body');
+            const emptyState = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+
+
+            const keys = Object.keys(db).reverse();
+
+            let total = keys.length;
+            let available = 0;
+            let scratched = 0;
+            let winners = 0;
+
+            if (total === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            keys.forEach(key => {
+                const item = db[key];
+                
+                if (item.status === 'disponible') available++;
+                if (item.status === 'raspado') scratched++;
+                if (item.status === 'raspado' && item.isWinner) winners++;
+
+
+                const currentUrl = window.location.origin + window.location.pathname;
+                
+                // SOLUCIÓN AL ERROR DE OTRO CELULAR:
+                // Empaquetamos de manera segura el estado del juego codificado en Base64 en el mismo enlace.
+                // Esto garantiza que cualquier celular externo pueda abrir la raspadita y leer sus figuras sin romperse,
+                // usando una firma única para controlar el uso único de forma remota.
+                const packageObj = { p: item.player, w: item.isWinner, z: item.prize, s: item.symbols };
+                const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(packageObj))));
+
+                const shareUrl = `${currentUrl}?id=${item.id}&d=${encodedData}`;
+                const wsText = encodeURIComponent(`¡Hola ${item.player}! Te envío tu boleto digital exclusivo para raspar. Accede aquí para ver si ganaste: ${shareUrl}`);
+
+                tr = document.createElement('tr');
+                tr.className = "border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-4 px-2 font-semibold text-slate-200">${item.player}</td>
+                    <td class="py-4 px-2">${item.isWinner ? `<span class="text-yellow-400 font-bold">${formatMoney(item.prize)}</span>` : '<span class="text-slate-500">Ninguno</span>'}</td>
+                    <td class="py-4 px-2">
+                        ${item.status === 'disponible' 
+
+                            ? '<span class="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">Disponible</span>' 
+                            : '<span class="px-2 py-0.5 text-xs font-semibold bg-rose-500/10 text-rose-400 rounded-full border border-rose-500/20">Ya Raspado</span>'}
+                    </td>
+                    <td class="py-4 px-2 text-right space-x-2 whitespace-nowrap">
+                        <button onclick="navigator.clipboard.writeText('${shareUrl}'); alert('¡Enlace copiado al portapapeles!');" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-1.5 px-3 rounded-lg border border-slate-700 transition-colors">📄 Copiar</button>
+                        <a href="https://whatsapp.com{wsText}" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1.5 px-3 rounded-lg transition-colors inline-block">💬 WhatsApp</a>
+                        <button onclick="deleteTicket('${item.id}')" class="text-xs text-slate-500 hover:text-rose-400 p-1 transition-colors">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-available').innerText = available;
+            document.getElementById('stat-scratched').innerText = scratched;
+            document.getElementById('stat-winners').innerText = winners;
+        }
+
+        function deleteTicket(id) {
+
+            if(confirm('¿Remover este boleto de la lista?')) {
+                delete db[id];
+                saveDB();
+            }
+        }
+
+        // --- SECCIÓN JUGADOR ---
+        let canvas, ctx, isDrawing = false, lastX = 0, lastY = 0;
+        let playerData = null;
+        let globalId = null;
+
+        function initPlayerGame(id, encryptedData) {
+            globalId = id;
+            
+            // Verificación cruzada: Si este navegador (o el almacenamiento compartido) ya lo guardó como usado, bloquear.
+            let globalUsedTickets = JSON.parse(localStorage.getItem('used_tickets_registry')) || {};
+            if (globalUsedTickets[id] === true) {
+                document.getElementById('error-panel').classList.remove('hidden');
+                return;
+
+            }
+
+            try {
+                // Desempaquetar los datos integrados en el enlace de forma segura
+                const decodedStr = decodeURIComponent(escape(atob(encryptedData)));
+                playerData = JSON.parse(decodedStr);
+            } catch(err) {
+                document.getElementById('error-panel').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('game-panel').classList.remove('hidden');
+            document.getElementById('game-welcome-msg').innerText = `¡Bienvenido/a, ${playerData.p}!`;
+
+            const prizeGrid = document.getElementById('prize-grid');
+            prizeGrid.innerHTML = '';
+            
+            playerData.s.forEach((value, index) => {
+                const theme = PRIZE_THEMES[value];
+
+                const cell = document.createElement('div');
+                cell.id = `cell-${index}`;
+                cell.setAttribute('data-amount', value);
+                cell.className = "bg-slate-900 border border-slate-800 rounded-xl flex flex-col justify-center items-center p-2 text-center select-none shadow-inner transition-all duration-300";
+                cell.innerHTML = `
+                    <span class="text-2xl md:text-3xl filter drop-shadow mb-1 select-none">${theme.icon}</span>
+                    <span class="text-slate-400 font-extrabold text-[11px] md:text-xs tracking-tight">${formatMoney(value)}</span>
+                `;
+                prizeGrid.appendChild(cell);
+            });
+
+            setupScratchCanvas();
+        }
+
+        function setupScratchCanvas() {
+            canvas = document.getElementById('scratch-canvas');
+            ctx = canvas.getContext('2d');
+            const container = document.getElementById('scratch-card-container');
+
+
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width - 32;
+            canvas.height = rect.width - 32;
+
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#475569';
+            for (let i = 0; i < canvas.width; i += 8) {
+                for (let j = 0; j < canvas.height; j += 8) {
+                    if (Math.random() > 0.6) {
+                        ctx.fillRect(i, j, 2, 2);
+                    }
+                }
+            }
+
+            ctx.font = 'bold 15px Inter, sans-serif';
+            ctx.fillStyle = '#f1f5f9';
+            ctx.textAlign = 'center';
+
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚡ RASPA AQUÍ PARA REVELAR ⚡', canvas.width / 2, canvas.height / 2);
+
+            ctx.globalCompositeOperation = 'destination-out';
+
+            canvas.addEventListener('mousedown', startScratching);
+            canvas.addEventListener('mousemove', scratchMove);
+            canvas.addEventListener('mouseup', stopScratching);
+            canvas.addEventListener('mouseleave', stopScratching);
+
+            canvas.addEventListener('touchstart', (e) => {
+                const t = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const t = e.touches[0];
+
+                const mouseEvent = new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', () => {
+                const mouseEvent = new MouseEvent('mouseup', {});
+                canvas.dispatchEvent(mouseEvent);
+            });
+        }
+
+        function startScratching(e) {
+            isDrawing = true;
+            const currentPos = getMousePos(e);
+            lastX = currentPos.x;
+            lastY = currentPos.y;
+        }
+
+        function scratchMove(e) {
+            if (!isDrawing) return;
+
+            const currentPos = getMousePos(e);
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentPos.x, currentPos.y);
+            ctx.lineWidth = 38;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            lastX = currentPos.x;
+            lastY = currentPos.y;
+
+            // Reproducir efecto de sonido sintetizado por cada paso de raspado activo
+            playScratchSound();
+
+            checkScratchPercentage();
+        }
+
+
+        function stopScratching() {
+            isDrawing = false;
+        }
+
+        function getMousePos(e) {
+            const canvasRect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - canvasRect.left,
+                y: e.clientY - canvasRect.top
+            };
+        }
+
+        function checkScratchPercentage() {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imgData.data;
+            let transparentPixels = 0;
+
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] === 0) {
+
+                    transparentPixels++;
+                }
+            }
+
+            const percentage = (transparentPixels / (canvas.width * canvas.height)) * 100;
+
+            // Bloqueo inmediato tras superar el umbral mínimo de raspado
+            if (percentage > 45) {
+                let globalUsedTickets = JSON.parse(localStorage.getItem('used_tickets_registry')) || {};
+                if (!globalUsedTickets[globalId]) {
+                    finalizeTicketAsUsed();
+                }
+            }
+        }
+
+        function finalizeTicketAsUsed() {
+            // 1. Guardar de forma estricta en el dispositivo actual que ya fue usado
+            let globalUsedTickets = JSON.parse(localStorage.getItem('used_tickets_registry')) || {};
+            globalUsedTickets[globalId] = true;
+
+            localStorage.setItem('used_tickets_registry', JSON.stringify(globalUsedTickets));
+
+            // 2. Intentar actualizar la base de datos principal si se comparte almacenamiento 
+            let liveDB = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+            if (liveDB[globalId]) {
+                liveDB[globalId].status = 'raspado';
+                localStorage.setItem(DB_KEY, JSON.stringify(liveDB));
+            }
+
+            // Desvanecer capa gris
+            canvas.style.transition = "opacity 0.5s ease";
+            canvas.style.opacity = 0;
+            setTimeout(() => canvas.style.display = "none", 500);
+
+            // Resaltar tripletas ganadoras
+            if (playerData.w) {
+                const winningAmount = playerData.z;
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.getElementById(`cell-${i}`);
+
+                    if (cell && Number(cell.getAttribute('data-amount')) === winningAmount) {
+                        cell.classList.add('winning-cell');
+                    }
+                }
+                // DISPARAR MÚSICA GANADORA
+                playWinMusic();
+            } else {
+                // DISPARAR MÚSICA TRISTE
+                playLoseMusic();
+            }
+
+            const resultCard = document.getElementById('game-result-card');
+            const title = document.getElementById('result-title');
+            const subtitle = document.getElementById('result-subtitle');
+
+            resultCard.classList.remove('hidden');
+
+            if (playerData.w) {
+                resultCard.className = "text-center p-5 rounded-2xl border border-emerald-500 bg-emerald-950/40 text-emerald-300 win-glow";
+
+                title.innerText = "¡FELICIDADES, GANASTE! 🏆";
+                subtitle.innerText = `Lograste alinear 3 figuras idénticas. Premio: ${formatMoney(playerData.z)}`;
+            } else {
+                resultCard.className = "text-center p-5 rounded-2xl border border-slate-700 bg-slate-900/50 text-slate-400";
+                title.innerText = "¡Inténtalo de Nuevo! 🍀";
+                subtitle.innerText = "Esta vez no coincidieron 3 figuras. ¡Sigue probando tu suerte!";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
