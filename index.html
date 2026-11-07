@@ -1,362 +1,161 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raspaditas Premium Online</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .gold-glow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.2); }
-        .win-glow { box-shadow: 0 0 30px rgba(34, 197, 94, 0.4); }
-        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; }
-        @keyframes pulse-winner { 0%, 100% { transform: scale(1); border-color: rgba(234, 179, 8, 0.5); background-color: rgba(234, 179, 8, 0.15); box-shadow: 0 0 10px rgba(234, 179, 8, 0.2); } 50% { transform: scale(1.05); border-color: rgba(234, 179, 8, 1); background-color: rgba(234, 179, 8, 0.3); box-shadow: 0 0 25px rgba(234, 179, 8, 0.6); } }
-        .winning-cell { animation: pulse-winner 1.5s infinite ease-in-out; border-width: 2px !important; z-index: 10; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn .5s ease forwards; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspaditas Premium</title>
+<style>
+body{background:#0f172a;color:#fff;font-family:Arial;padding:16px;margin:0}
+.box{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{font-size:32px;font-weight:900;text-align:center}
+.amarillo{color:#facc15}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;margin:6px 0 12px;box-sizing:border-box}
+button{width:100%;padding:13px;border:none;border-radius:12px;font-weight:900;cursor:pointer;margin-top:8px}
+.btnA{background:#facc15;color:#000}.btnV{background:#22c55e;color:#fff}.btnG{background:#334155;color:#fff}
+table{width:100%;font-size:13px}td{padding:8px 4px;border-bottom:1px solid #334155}
+#prize-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#020617;padding:10px;border-radius:16px;aspect-ratio:1}
+.cell{background:#1e293b;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px}
+.cell small{font-size:11px;color:#cbd5e1;font-weight:800}
+#scratch-wrap{position:relative}
+canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;touch-action:none}
+.win{border:3px solid #facc15;box-shadow:0 0 15px #facc15}
+.oculto{display:none!important}
+</style>
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-yellow-500 selection:text-slate-900">
+<body>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
-        
-        <!-- PANEL ADMIN -->
-        <div id="admin-panel" class="hidden space-y-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">
-                        Raspaditas Premium <span class="text-sm font-semibold px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md ml-2 border border-amber-500/20">Panel Admin</span>
-                    </h1>
-                    <p class="text-slate-400 text-sm mt-1">Generación segura de boletos únicos de un solo uso y control de raspado en tiempo real.</p>
-                </div>
-            </div>
+<div id="admin-panel">
+<h1 style="color:#facc15">Raspaditas Premium</h1>
+<div class="grid2">
+<div class="box"><small>TOTAL DE CARTONES GENERADOS</small><div class="big" id="stat-total">0</div></div>
+<div class="box"><small>TOTAL PREMIADO</small><div class="big amarillo" id="stat-premiado">Gs. 0</div><small id="stat-count">0 cartones con premio</small></div>
+</div>
 
-            <!-- NUEVO - SOLO 2 CONTROLES COMO PEDISTE JOSÉ -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass p-6 rounded-2xl shadow-xl text-center">
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total de Cartones Generados</p>
-                    <p id="stat-total" class="text-4xl font-black mt-2 text-slate-100">0</p>
-                    <p class="text-xs text-slate-500 mt-1">Cartones creados en total</p>
-                </div>
-                <div class="glass p-6 rounded-2xl shadow-xl text-center border-yellow-500/20">
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Premiado</p>
-                    <p id="stat-premiado" class="text-4xl font-black mt-2 text-yellow-400">Gs. 0</p>
-                    <p id="stat-premiado-count" class="text-xs text-slate-400 mt-1">0 cartones con premio</p>
-                </div>
-            </div>
+<div class="box">
+<h3>✨ Configurar Enlace</h3>
+Nombre del Jugador<br><input id="input-player" placeholder="Ej: Juan Perez">
+Tipo<br><select id="select-mode"><option value="aleatorio">Aleatorio (30% Ganar)</option><option value="ganador">Forzar Ganador</option><option value="perdedor">Forzar Sin Premio</option></select>
+Premio<br><select id="select-prize"><option value="5000">Gs. 5.000</option><option value="10000">Gs. 10.000</option><option value="20000">Gs. 20.000</option><option value="50000">Gs. 50.000</option><option value="100000">Gs. 100.000</option><option value="500000">Gs. 500.000</option><option value="1000000">Gs. 1.000.000</option><option value="3000000">Gs. 3.000.000</option><option value="5000000">Gs. 5.000.000</option></select>
+<button class="btnA" onclick="crear()">Generar Enlace Personalizado</button>
+</div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="glass p-6 rounded-2xl shadow-2xl h-fit border border-slate-800">
-                    <h2 class="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2"><span>✨</span> Configurar Enlace</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nombre del Jugador</label>
-                            <input type="text" id="input-player" placeholder="Ej: Juan Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipo de Resultado</label>
-                            <select id="select-mode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500 transition-colors">
-                                <option value="aleatorio">Aleatorio (30% Probabilidad Ganar)</option>
-                                <option value="ganador">Forzar Ganador (Elige el premio abajo)</option>
-                                <option value="perdedor">Forzar Sin Premio</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Monto del Premio (Si resulta ganador)</label>
-                            <select id="select-prize" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500 transition-colors">
-                                <option value="5000">Gs. 5.000</option>
-                                <option value="10000">Gs. 10.000</option>
-                                <option value="20000">Gs. 20.000</option>
-                                <option value="50000">Gs. 50.000</option>
-                                <option value="100000">Gs. 100.000</option>
-                                <option value="500000">Gs. 500.000</option>
-                                <option value="1000000">Gs. 1.000.000</option>
-                                <option value="3000000">Gs. 3.000.000</option>
-                                <option value="5000000">Gs. 5.000.000</option>
-                            </select>
-                        </div>
-                        <button id="btn-generate" class="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2 gold-glow">
-                            Generar Enlace Personalizado
-                        </button>
-                    </div>
-                </div>
+<div class="box"><h3>Enlaces Activos</h3><div id="lista"></div><button class="btnG" onclick="if(confirm('¿Borrar todo?')){db={};guardar()}">Reiniciar Base de Datos</button></div>
+</div>
 
-                <div class="lg:col-span-2 glass rounded-2xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col justify-between">
-                    <div class="p-6 pb-2">
-                        <h2 class="text-xl font-bold text-slate-100">Enlaces Activos y Estado</h2>
-                        <p class="text-xs text-slate-400 mt-1">Comparte los enlaces creados por WhatsApp. El estado cambiará automáticamente.</p>
-                    </div>
-                    <div class="overflow-x-auto max-h-[420px] overflow-y-auto px-6">
-                        <table class="w-full text-left border-collapse mt-4">
-                            <thead>
-                                <tr class="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                    <th class="py-3 px-2">Jugador</th>
-                                    <th class="py-3 px-2">Premio</th>
-                                    <th class="py-3 px-2">Estado</th>
-                                    <th class="py-3 px-2 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tickets-table-body" class="divide-y divide-slate-800/50 text-sm"></tbody>
-                        </table>
-                        <div id="empty-state" class="hidden text-center py-12 text-slate-500">
-                            No hay enlaces generados todavía. Usa el panel de configuración.
-                        </div>
-                    </div>
-                    <div class="p-4 bg-slate-900/40 border-t border-slate-800 text-right">
-                        <button id="btn-clear-all" class="text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors">Reiniciar Base de Datos</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div id="game-panel" class="oculto">
+<h2 style="text-align:center">¡Tu Raspadita!</h2>
+<p id="welcome" style="text-align:center;color:#facc15"></p>
+<div id="scratch-wrap"><div id="prize-grid"></div><canvas id="canvas"></canvas></div>
+<div id="resultado" class="box oculto" style="text-align:center;margin-top:14px"><h2 id="res-t"></h2><p id="res-s"></p><div id="res-wa"></div></div>
+</div>
 
-        <!-- JUGADOR -->
-        <div id="game-panel" class="hidden max-w-md mx-auto space-y-6 animate-fadeIn">
-            <div class="text-center space-y-2">
-                <h1 class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-slate-100 to-slate-300 uppercase">¡Tu Raspadita!</h1>
-                <p id="game-welcome-msg" class="text-amber-400 font-semibold text-sm">¡Mucha suerte!</p>
-                <p class="text-slate-400 text-xs">Consigue 3 montos idénticos para ganar el premio.</p>
-            </div>
-            <div id="scratch-card-container" class="glass p-4 rounded-3xl shadow-2xl border border-slate-700/50 relative overflow-hidden">
-                <div id="prize-grid" class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-2xl w-full aspect-square no-select"></div>
-                <canvas id="scratch-canvas" class="absolute inset-0 m-4 rounded-2xl cursor-crosshair no-select"></canvas>
-            </div>
-            <div id="game-result-card" class="hidden text-center p-5 rounded-2xl border transition-all animate-fadeIn">
-                <h3 id="result-title" class="text-2xl font-black"></h3>
-                <p id="result-subtitle" class="text-sm mt-1 opacity-90"></p>
-                <div id="result-wa" class="mt-4"></div>
-            </div>
-        </div>
+<div id="error-panel" class="oculto" style="text-align:center;padding:40px 0"><h2>🔒 Enlace Inválido o Ya Utilizado</h2><p>Pedí un nuevo enlace a tu vendedor.</p></div>
 
-        <!-- ERROR / YA USADO -->
-        <div id="error-panel" class="hidden max-w-md mx-auto text-center space-y-6 py-16">
-            <div class="text-6xl">🔒</div>
-            <h1 class="text-2xl font-extrabold text-slate-200">Enlace Inválido o Ya Utilizado</h1>
-            <p class="text-slate-400 text-sm">Cada boleto de raspadita es de un solo uso por motivos de seguridad y transparencia. Contacta con tu administrador para conseguir uno nuevo.</p>
-        </div>
+<script>
+let db=JSON.parse(localStorage.getItem('db_raspa')||'{}');
+let audio=null;
+function sonido(g){try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),gn=audio.createGain();o.type='triangle';o.frequency.value=g;gn.gain.setValueAtTime(0.15,audio.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,audio.currentTime+0.4);o.connect(gn);gn.connect(audio.destination);o.start();o.stop(audio.currentTime+0.4)}catch(e){}}
+function guardar(){localStorage.setItem('db_raspa',JSON.stringify(db));mostrar()}
+let TEMAS={5000:'🐶',10000:'🐱',20000:'🦊',50000:'🦁',100000:'🐷',500000:'🐼',1000000:'🦄',3000000:'🐉',5000000:'👑'};
+let PREMIOS=[5000,10000,20000,50000,100000,500000,1000000,3000000,5000000];
+function fmt(n){return 'Gs. '+Number(n).toLocaleString('es-PY')}
+function crear(){
+let nombre=document.getElementById('input-player').value||'Jugador Anonimo';
+let modo=document.getElementById('select-mode').value;
+let elegido=Number(document.getElementById('select-prize').value);
+let win=false,premio=0;
+if(modo=='aleatorio'){win=Math.random()<0.3;premio=win?PREMIOS[Math.floor(Math.random()*PREMIOS.length)]:0}
+else if(modo=='ganador'){win=true;premio=elegido}
+let pool=[];
+if(win){pool=[premio,premio,premio];while(pool.length<9){let r=PREMIOS[Math.floor(Math.random()*PREMIOS.length)];if(r!=premio&&pool.filter(x=>x==r).length<2)pool.push(r)}}
+else{while(pool.length<9){let r=PREMIOS[Math.floor(Math.random()*PREMIOS.length)];if(pool.filter(x=>x==r).length<2)pool.push(r)}}
+pool.sort(()=>Math.random()-0.5);
+let id='tkt_'+Date.now();
+db[id]={player:nombre,win:win,prize:premio,symbols:pool,status:'disponible'};
+document.getElementById('input-player').value='';guardar();
+}
+function mostrar(){
+let keys=Object.keys(db).reverse();
+let total=keys.length,totalGs=0,con=0;
+keys.forEach(k=>{if(db[k].win){totalGs+=db[k].prize;con++}});
+document.getElementById('stat-total').innerText=total;
+document.getElementById('stat-premiado').innerText=fmt(totalGs);
+document.getElementById('stat-count').innerText=con+' cartones con premio';
+let h='';
+keys.forEach(k=>{
+let it=db[k];
+let obj={p:it.player,w:it.win,z:it.prize,s:it.symbols};
+let enc=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+let url=location.origin+location.pathname+'?id='+k+'&d='+enc;
+let wa='https://wa.me/?text='+encodeURIComponent('Hola '+it.player+'! Tu raspadita: '+url);
+h+='<div style="border-bottom:1px solid #334155;padding:10px 0"><b>'+it.player+'</b> - '+(it.win?fmt(it.prize):'Sin premio')+' - '+(it.status=='disponible'?'🟢 Disponible':'🔴 Ya raspado')+'<br><button class="btnG" onclick="copiar(\''+url+'\')">📄 Copiar</button> <a href="'+wa+'" target="_blank"><button class="btnV">💬 WhatsApp</button></a> <button class="btnG" onclick="borrar(\''+k+'\')">🗑️</button></div>';
+});
+document.getElementById('lista').innerHTML=h||'Todavía no hay enlaces.';
+}
+function copiar(u){navigator.clipboard?navigator.clipboard.writeText(u).then(()=>alert('¡Copiado!')):prompt('Copiá:',u)}
+function borrar(id){if(confirm('¿Borrar?')){delete db[id];guardar()}}
 
-    </main>
+let params=new URLSearchParams(location.search);
+let tid=params.get('id'), dat=params.get('d');
+let playerData=null, canvas, ctx, dibujando=false, lx=0, ly=0;
 
-    <footer class="border-t border-slate-900 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
-        Plataforma Autónoma de Raspaditas Premium Online &copy; 2026
-    </footer>
+if(tid&&dat){
+document.getElementById('admin-panel').classList.add('oculto');
+let usados=JSON.parse(localStorage.getItem('usados')||'{}');
+if(usados[tid]){document.getElementById('error-panel').classList.remove('oculto')}
+else{
+try{playerData=JSON.parse(decodeURIComponent(escape(atob(dat))))}catch(e){document.getElementById('error-panel').classList.remove('oculto')}
+if(playerData){
+document.getElementById('game-panel').classList.remove('oculto');
+document.getElementById('welcome').innerText='¡Bienvenido/a, '+playerData.p+'!';
+let grid=document.getElementById('prize-grid');
+playerData.s.forEach((v,i)=>{
+let d=document.createElement('div');d.className='cell';d.id='cell-'+i;d.setAttribute('data-v',v);d.innerHTML=TEMAS[v]+'<small>'+fmt(v)+'</small>';grid.appendChild(d);
+});
+iniciarRaspa();
+}
+}
+}else{mostrar()}
 
-    <script>
-        let audioCtx = null;
-        function getAudioContext() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } return audioCtx; }
-        function playScratchSound() {
-            try {
-                const ctxAudio = getAudioContext(); const bufferSize = ctxAudio.sampleRate * 0.04;
-                const buffer = ctxAudio.createBuffer(1, bufferSize, ctxAudio.sampleRate); const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-                const noise = ctxAudio.createBufferSource(); noise.buffer = buffer;
-                const filter = ctxAudio.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 1000;
-                const gain = ctxAudio.createGain(); gain.gain.setValueAtTime(0.08, ctxAudio.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.04);
-                noise.connect(filter); filter.connect(gain); gain.connect(ctxAudio.destination); noise.start();
-            } catch (e) {}
-        }
-        function playWinMusic() {
-            try {
-                const ctxAudio = getAudioContext(); const now = ctxAudio.currentTime;
-                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, index) => {
-                    const osc = ctxAudio.createOscillator(); const gain = ctxAudio.createGain();
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, now + (index * 0.1));
-                    gain.gain.setValueAtTime(0.15, now + (index * 0.1)); gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.1) + 0.4);
-                    osc.connect(gain); gain.connect(ctxAudio.destination); osc.start(now + (index * 0.1)); osc.stop(now + (index * 0.1) + 0.4);
-                });
-            } catch (e) {}
-        }
-        function playLoseMusic() {
-            try {
-                const ctxAudio = getAudioContext(); const now = ctxAudio.currentTime;
-                const notes = [392.00, 349.23, 311.13, 246.94];
-                notes.forEach((freq, index) => {
-                    const osc = ctxAudio.createOscillator(); const gain = ctxAudio.createGain();
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(freq, now + (index * 0.15));
-                    gain.gain.setValueAtTime(0.12, now + (index * 0.15)); gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.15) + 0.5);
-                    osc.connect(gain); gain.connect(ctxAudio.destination); osc.start(now + (index * 0.15)); osc.stop(now + (index * 0.15) + 0.5);
-                });
-            } catch (e) {}
-        }
-
-        const DB_KEY = 'raspaditas_premium_db';
-        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); updateAdminDashboard(); }
-
-        const PRIZE_THEMES = {
-            5000:    { icon: '🐶', name: 'Perrito Hueso' },
-            10000:   { icon: '🐱', name: 'Gatito Suerte' },
-            20000:   { icon: '🦊', name: 'Zorro Astuto' },
-            50000:   { icon: '🦁', name: 'León Dorado' },
-            100000:  { icon: '🐷', name: 'Alcancía Cerdito' },
-            500000:  { icon: '🐼', name: 'Oso Panda' },
-            1000000: { icon: '🦄', name: 'Unicornio Mágico' },
-            3000000: { icon: '🐉', name: 'Dragón Imperial' },
-            5000000: { icon: '👑', name: 'Corona Real' }
-        };
-        const VALID_PRIZES = Object.keys(PRIZE_THEMES).map(Number);
-        function formatMoney(amount) { if (amount === 0 || !amount) return "Sin Premio"; return "Gs. " + Number(amount).toLocaleString('es-PY'); }
-        function generateUniqueId() { return 'tkt_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const ticketId = urlParams.get('id');
-        const dataParam = urlParams.get('d'); 
-
-        window.onload = function() {
-            if (ticketId && dataParam) { initPlayerGame(ticketId, dataParam); }
-            else { initAdminPanel(); }
-        };
-
-        function initAdminPanel() {
-            document.getElementById('admin-panel').classList.remove('hidden');
-            document.getElementById('btn-generate').onclick = createTicketLink;
-            document.getElementById('btn-clear-all').onclick = () => {
-                if(confirm('¿Seguro que deseas eliminar todos los registros y enlaces creados?')) { db = {}; saveDB(); }
-            };
-            updateAdminDashboard();
-            window.addEventListener('storage', (e) => { if (e.key === DB_KEY) { db = JSON.parse(e.newValue) || {}; updateAdminDashboard(); } });
-        }
-
-        function createTicketLink() {
-            const playerInput = document.getElementById('input-player').value.trim();
-            const playerName = playerInput || 'Jugador Anónimo';
-            const mode = document.getElementById('select-mode').value;
-            const chosenPrize = Number(document.getElementById('select-prize').value);
-            let isWinner = false; let prizeAmount = 0;
-            if (mode === 'aleatorio') { isWinner = Math.random() < 0.30; prizeAmount = isWinner ? VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)] : 0; }
-            else if (mode === 'ganador') { isWinner = true; prizeAmount = chosenPrize; }
-            else { isWinner = false; prizeAmount = 0; }
-            const gridSymbols = generateBalancedGrid(isWinner, prizeAmount);
-            const newId = generateUniqueId();
-            db[newId] = { id: newId, player: playerName, isWinner: isWinner, prize: prizeAmount, symbols: gridSymbols, status: 'disponible', createdAt: new Date().toLocaleString() };
-            saveDB();
-            document.getElementById('input-player').value = '';
-        }
-
-        function generateBalancedGrid(isWinner, prizeAmount) {
-            let pool = [];
-            if (isWinner) {
-                pool = [prizeAmount, prizeAmount, prizeAmount];
-                while (pool.length < 9) {
-                    let randomPrize = VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)];
-                    if (randomPrize !== prizeAmount && pool.filter(x => x === randomPrize).length < 2) { pool.push(randomPrize); }
-                }
-            } else {
-                let attempts = 0;
-                while (pool.length < 9 && attempts < 100) {
-                    let randomPrize = VALID_PRIZES[Math.floor(Math.random() * VALID_PRIZES.length)];
-                    if (pool.filter(x => x === randomPrize).length < 2) { pool.push(randomPrize); }
-                    attempts++;
-                }
-                if (pool.length < 9) { pool = [5000, 10000, 20000, 50000, 100000, 500000, 1000000, 3000000, 5000]; }
-            }
-            return pool.sort(() => Math.random() - 0.5);
-        }
-
-        function updateAdminDashboard() {
-            const tbody = document.getElementById('tickets-table-body');
-            const emptyState = document.getElementById('empty-state');
-            tbody.innerHTML = '';
-            const keys = Object.keys(db).reverse();
-
-            // NUEVO - SOLO 2 TOTALES COMO PEDISTE
-            let totalCartones = keys.length;
-            let totalPremiadoGs = 0;
-            let totalCartonesConPremio = 0;
-
-            keys.forEach(key => {
-                const item = db[key];
-                if (item.isWinner) {
-                    totalPremiadoGs += Number(item.prize || 0);
-                    totalCartonesConPremio++;
-                }
-            });
-
-            if (totalCartones === 0) { emptyState.classList.remove('hidden'); } else { emptyState.classList.add('hidden'); }
-
-            keys.forEach(key => {
-                const item = db[key];
-                const currentUrl = window.location.origin + window.location.pathname;
-                const packageObj = { p: item.player, w: item.isWinner, z: item.prize, s: item.symbols };
-                const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(packageObj))));
-                const shareUrl = `${currentUrl}?id=${item.id}&d=${encodedData}`;
-                const wsText = encodeURIComponent(`¡Hola ${item.player}! Te envío tu boleto digital exclusivo para raspar. Accede aquí para ver si ganaste: ${shareUrl}`);
-                const wsUrl = `https://wa.me/?text=${wsText}`;
-                let tr = document.createElement('tr');
-                tr.className = "border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-4 px-2 font-semibold text-slate-200">${item.player}</td>
-                    <td class="py-4 px-2">${item.isWinner ? `<span class="text-yellow-400 font-bold">${formatMoney(item.prize)}</span>` : '<span class="text-slate-500">Ninguno</span>'}</td>
-                    <td class="py-4 px-2">
-                        ${item.status === 'disponible' 
-                            ? '<span class="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">Disponible</span>' 
-                            : '<span class="px-2 py-0.5 text-xs font-semibold bg-rose-500/10 text-rose-400 rounded-full border border-rose-500/20">Ya Raspado</span>'}
-                    </td>
-                    <td class="py-4 px-2 text-right space-x-2 whitespace-nowrap">
-                        <button onclick="copyLink('${shareUrl}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-1.5 px-3 rounded-lg border border-slate-700 transition-colors">📄 Copiar</button>
-                        <a href="${wsUrl}" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-1.5 px-3 rounded-lg transition-colors inline-block">💬 WhatsApp</a>
-                        <button onclick="deleteTicket('${item.id}')" class="text-xs text-slate-500 hover:text-rose-400 p-1 transition-colors">🗑️</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // NUEVO - Actualizar solo los 2 totales
-            document.getElementById('stat-total').innerText = totalCartones;
-            document.getElementById('stat-premiado').innerText = "Gs. " + totalPremiadoGs.toLocaleString('es-PY');
-            document.getElementById('stat-premiado-count').innerText = totalCartonesConPremio + " cartones con premio";
-        }
-
-        function copyLink(url){
-            if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(url).then(()=>alert('¡Enlace copiado!')).catch(()=>{ prompt('Copiá el enlace:', url); });
-            } else { prompt('Copiá el enlace:', url); }
-        }
-
-        function deleteTicket(id) { if(confirm('¿Remover este boleto de la lista?')) { delete db[id]; saveDB(); } }
-
-        let canvas, ctx, isDrawing = false, lastX = 0, lastY = 0;
-        let playerData = null; let globalId = null;
-
-        function initPlayerGame(id, encryptedData) {
-            globalId = id;
-            let globalUsedTickets = JSON.parse(localStorage.getItem('used_tickets_registry')) || {};
-            if (globalUsedTickets[id] === true) { document.getElementById('error-panel').classList.remove('hidden'); return; }
-            try {
-                const decodedStr = decodeURIComponent(escape(atob(encryptedData)));
-                playerData = JSON.parse(decodedStr);
-            } catch(err) { document.getElementById('error-panel').classList.remove('hidden'); return; }
-            document.getElementById('game-panel').classList.remove('hidden');
-            document.getElementById('game-welcome-msg').innerText = `¡Bienvenido/a, ${playerData.p}!`;
-            const prizeGrid = document.getElementById('prize-grid');
-            prizeGrid.innerHTML = '';
-            playerData.s.forEach((value, index) => {
-                const theme = PRIZE_THEMES[value];
-                const cell = document.createElement('div');
-                cell.id = `cell-${index}`;
-                cell.setAttribute('data-amount', value);
-                cell.className = "bg-slate-900 border border-slate-800 rounded-xl flex flex-col justify-center items-center p-2 text-center select-none shadow-inner transition-all duration-300";
-                cell.innerHTML = `<span class="text-2xl md:text-3xl filter drop-shadow mb-1 select-none">${theme.icon}</span><span class="text-slate-400 font-extrabold text-[11px] md:text-xs tracking-tight">${formatMoney(value)}</span>`;
-                prizeGrid.appendChild(cell);
-            });
-            setupScratchCanvas();
-        }
-
-        function setupScratchCanvas() {
-            canvas = document.getElementById('scratch-canvas');
-            ctx = canvas.getContext('2d');
-            const container = document.getElementById('scratch-card-container');
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width - 32;
-            canvas.height = rect.width - 32;
-            ctx.fillStyle = '#64748b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#475569';
-            for (let i = 0; i < canvas.width; i += 8) { for (let j = 0; j < canvas.height; j += 8) { if (Math.random() > 0.6) { ctx.fillRect(i, j, 2, 2); } } }
-            ctx.font = 'bold 15px Inter, sans-serif'; ctx.fillStyle = '#f1f5f9'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('⚡ RASPA AQUÍ PARA REVELAR ⚡', canvas.width / 2, canvas.height / 2);
-            ctx.globalCompositeOperation = 'destination-out';
-            canvas.addEventListener('mousedown', startScratching);
-            canvas.addEventListener('mousemove', scratchMove);
-            canvas.addEventListener('mouseup', stopScratching);
+function iniciarRaspa(){
+canvas=document.getElementById('canvas');ctx=canvas.getContext('2d');
+let wrap=document.getElementById('scratch-wrap');
+canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;
+ctx.fillStyle='#64748b';ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle='#fff';ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.fillText('⚡ RASPA AQUÍ ⚡',canvas.width/2,canvas.height/2);
+ctx.globalCompositeOperation='destination-out';
+function pos(e){let r=canvas.getBoundingClientRect();let t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
+function start(e){dibujando=true;let p=pos(e);lx=p.x;ly=p.y}
+function move(e){if(!dibujando)return;e.preventDefault();let p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.lineWidth=40;ctx.lineCap='round';ctx.stroke();lx=p.x;ly=p.y;revisar()}
+function end(){dibujando=false}
+canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);canvas.addEventListener('mouseup',end);
+canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end);
+}
+function revisar(){
+let d=ctx.getImageData(0,0,canvas.width,canvas.height);let tot=0;
+for(let i=3;i<d.data.length;i+=4){if(d.data[i]==0)tot++}
+let porc=(tot/(canvas.width*canvas.height))*100;
+if(porc>45)finalizar();
+}
+function finalizar(){
+if(canvas.style.display=='none')return;
+let usados=JSON.parse(localStorage.getItem('usados')||'{}');usados[tid]=true;localStorage.setItem('usados',JSON.stringify(usados));
+if(db[tid]){db[tid].status='raspado';localStorage.setItem('db_raspa',JSON.stringify(db))}
+canvas.style.transition='opacity .5s';canvas.style.opacity=0;setTimeout(()=>canvas.style.display='none',500);
+let res=document.getElementById('resultado');res.classList.remove('oculto');
+if(playerData.w){
+for(let i=0;i<9;i++){let c=document.getElementById('cell-'+i);if(Number(c.getAttribute('data-v'))==playerData.z)c.classList.add('win')}
+[523,659,784,1046].forEach((f,i)=>setTimeout(()=>sonido(f),i*120));
+document.getElementById('res-t').innerText='¡FELICIDADES, GANASTE! 🏆';
+document.getElementById('res-s').innerText='Premio: '+fmt(playerData.z);
+document.getElementById('res-wa').innerHTML='<a href="https://wa.me/?text='+encodeURIComponent('Hola! Soy '+playerData.p+' y GANÉ '+fmt(playerData.z)+' Codigo: '+tid)+'" target="_blank"><button class="btnV">💬 Avisar a mi vendedor</button></a>';
+}else{
+document.getElementById('res-t').innerText='¡Intentalo de Nuevo! 🍀';
+document.getElementById('res-s').innerText='Esta vez no coincidieron 3 figuras.';
+document.getElementById('res-wa').innerHTML='<a href="https://wa.me/?text='+encodeURIComponent('Hola! Soy '+playerData.p+' ya raspé, no gané. Codigo: '+tid)+'" target="_blank"><button class="btnG">💬 Avisar a mi vendedor</button></a>';
+}
+}
+</script>
+</body>
+</html>
