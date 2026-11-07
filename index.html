@@ -3,159 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raspaditas Premium</title>
+<title>Plataforma de Raspaditas Online</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FIREBASE PARA BLOQUEO TOTAL -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-body{background:#0f172a;color:#fff;font-family:Arial;padding:16px;margin:0}
-.box{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px;margin-bottom:12px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.big{font-size:32px;font-weight:900;text-align:center}
-.amarillo{color:#facc15}
-input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;margin:6px 0 12px;box-sizing:border-box}
-button{width:100%;padding:13px;border:none;border-radius:12px;font-weight:900;cursor:pointer;margin-top:8px}
-.btnA{background:#facc15;color:#000}.btnV{background:#22c55e;color:#fff}.btnG{background:#334155;color:#fff}
-table{width:100%;font-size:13px}td{padding:8px 4px;border-bottom:1px solid #334155}
-#prize-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#020617;padding:10px;border-radius:16px;aspect-ratio:1}
-.cell{background:#1e293b;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px}
-.cell small{font-size:11px;color:#cbd5e1;font-weight:800}
-#scratch-wrap{position:relative}
-canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;touch-action:none}
-.win{border:3px solid #facc15;box-shadow:0 0 15px #facc15}
-.oculto{display:none!important}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
+.gold-text{color:#fbbf24;text-shadow:0 0 10px rgba(251,191,36,0.4)}
+.scratch-card{transition:transform .2s,box-shadow .2s}
+.scratch-card:hover{transform:translateY(-5px);box-shadow:0 10px 20px rgba(139,92,246,.3)}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shimmer-bg{background:linear-gradient(90deg,#2d264d 25%,#4c3e7a 50%,#2d264d 75%);background-size:200% 100%;animation:shimmer 2.5s infinite linear}
+@keyframes pulse-gold{0%,100%{transform:scale(1);box-shadow:0 0 10px #fbbf24}50%{transform:scale(1.15);box-shadow:0 0 25px #fbbf24,0 0 40px #f59e0b}}
+.winner-pulse{animation:pulse-gold 1s infinite;border:3px solid #fbbf24!important;background-color:rgba(251,191,36,.2)!important;z-index:10}
 </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between">
+<main class="flex-grow flex items-center justify-center p-4 w-full max-w-6xl mx-auto">
 
-<div id="admin-panel">
-<h1 style="color:#facc15">Raspaditas Premium</h1>
-<div class="grid2">
-<div class="box"><small>TOTAL DE CARTONES GENERADOS</small><div class="big" id="stat-total">0</div></div>
-<div class="box"><small>TOTAL PREMIADO</small><div class="big amarillo" id="stat-premiado">Gs. 0</div><small id="stat-count">0 cartones con premio</small></div>
+<div id="admin-view" class="w-full bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl hidden">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-6 mb-6 gap-4">
+<div><h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">🎰 <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-400">Panel de Control de Raspaditas</span></h1><p class="text-slate-400 text-sm mt-1">Genera y administra los accesos únicos para los jugadores.</p></div>
+<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Bloqueo Global Activo - Firebase</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+<div class="bg-slate-950 p-5 rounded-xl border border-slate-800/60 text-center"><p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total de Cartones Generados</p><p id="stat-total" class="text-4xl font-black text-white mt-1">0</p><p class="text-[11px] text-slate-500 mt-1">Cartones vendidos en total</p></div>
+<div class="bg-slate-950 p-5 rounded-xl border border-amber-500/20 text-center"><p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Premiado</p><p id="stat-total-premiado" class="text-4xl font-black text-amber-400 mt-1">0 Gs</p><p id="stat-premiado-count" class="text-[11px] text-slate-400 mt-1">0 cartones con premio</p></div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="bg-slate-950/50 p-5 rounded-xl border border-slate-800/80 h-fit">
+<h2 class="text-lg font-bold text-white mb-4">🛠️ Configurar Enlace</h2>
+<div class="space-y-4">
+<div><label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipo de Enlace</label>
+<div class="grid grid-cols-2 gap-2">
+<button type="button" id="btn-type-prize" onclick="setPrizeType(true)" class="py-2.5 px-4 rounded-lg font-semibold text-sm transition border bg-amber-500/20 border-amber-500 text-amber-300">🎁 Con Premio</button>
+<button type="button" id="btn-type-noprize" onclick="setPrizeType(false)" class="py-2.5 px-4 rounded-lg font-semibold text-sm transition border bg-slate-900 border-slate-700 text-slate-400">❌ Sin Premio</button>
+</div></div>
+<div id="wrapper-prize-amount"><label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Monto del Premio</label>
+<select id="prize-amount" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-bold"><option value="5.000">5.000 Gs</option><option value="10.000" selected>10.000 Gs</option><option value="20.000">20.000 Gs</option><option value="50.000">50.000 Gs</option><option value="100.000">100.000 Gs</option><option value="500.000">500.000 Gs</option><option value="1.000.000">1.000.000 Gs</option><option value="3.000.000">3.000.000 Gs</option><option value="5.000.000">5.000.000 Gs</option></select></div>
+<div><label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Cantidad de Raspaditas (Max 10)</label>
+<div class="flex items-center gap-3"><input type="range" id="card-quantity" min="1" max="10" value="1" oninput="updateQtyLabel(this.value)" class="w-full accent-purple-500"><span id="qty-label" class="bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 px-3 py-1 rounded-md text-sm min-w-[36px] text-center">1</span></div>
+<p class="text-[11px] text-slate-500 mt-1">El jugador raspará esta cantidad de cartones secuencialmente.</p></div>
+<button onclick="generateScratchLink()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg">🚀 Crear Enlace Único</button>
+</div></div>
+<div class="lg:col-span-2 flex flex-col"><h2 class="text-lg font-bold text-white mb-4">🔗 Enlaces Activos Creados</h2>
+<div class="flex-grow overflow-x-auto bg-slate-950/30 border border-slate-800/80 rounded-xl max-h-[380px] overflow-y-auto">
+<table class="w-full text-left"><thead><tr class="bg-slate-950 text-slate-400 uppercase text-[10px] border-b border-slate-800"><th class="p-3">ID / Configuración</th><th class="p-3">Destino / Enlace</th><th class="p-3 text-center">Estado Global</th><th class="p-3 text-right">Acción</th></tr></thead>
+<tbody id="links-table-body" class="text-xs divide-y divide-slate-800/60"></tbody></table>
+<div id="no-links-msg" class="text-center py-12 text-slate-500 hidden">No has generado ningún enlace todavía.</div>
+</div></div>
+</div></div>
+
+<div id="error-view" class="w-full max-w-md bg-slate-900/90 border border-red-500/30 rounded-2xl p-8 text-center hidden"><div class="text-3xl mb-4">⚠️</div><h2 class="text-2xl font-bold text-white mb-2">Enlace no válido</h2><p id="error-message-text" class="text-slate-400 text-sm">Este token ya fue utilizado.</p></div>
+
+<div id="player-select-view" class="w-full max-w-2xl bg-slate-900/80 rounded-2xl p-6 border border-slate-800 text-center hidden">
+<span id="player-badge-qty" class="bg-purple-500/20 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">Cargando...</span>
+<h2 class="text-2xl md:text-3xl font-extrabold text-white mt-3">¡Elige tu Cartón de la Suerte!</h2>
+<p class="text-slate-400 text-sm mt-1">Selecciona uno de los 9 cartones para empezar.</p>
+<div class="grid grid-cols-3 gap-3 max-w-md mx-auto aspect-square mb-6 mt-4">
+<button onclick="selectCarton(0)" id="carton-0" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦊<span class="text-xs block opacity-60">#1</span></button>
+<button onclick="selectCarton(1)" id="carton-1" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦁<span class="text-xs block opacity-60">#2</span></button>
+<button onclick="selectCarton(2)" id="carton-2" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🐼<span class="text-xs block opacity-60">#3</span></button>
+<button onclick="selectCarton(3)" id="carton-3" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦊<span class="text-xs block opacity-60">#4</span></button>
+<button onclick="selectCarton(4)" id="carton-4" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦁<span class="text-xs block opacity-60">#5</span></button>
+<button onclick="selectCarton(5)" id="carton-5" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🐼<span class="text-xs block opacity-60">#6</span></button>
+<button onclick="selectCarton(6)" id="carton-6" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦊<span class="text-xs block opacity-60">#7</span></button>
+<button onclick="selectCarton(7)" id="carton-7" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🦁<span class="text-xs block opacity-60">#8</span></button>
+<button onclick="selectCarton(8)" id="carton-8" class="shimmer-bg rounded-xl border-2 border-slate-700/60 scratch-card">🐼<span class="text-xs block opacity-60">#9</span></button>
+</div>
+<button id="btn-confirm-select" disabled onclick="goToScratchPhase()" class="w-full max-w-xs bg-slate-800 text-slate-500 font-bold py-3 rounded-xl">Selecciona un cartón</button>
 </div>
 
-<div class="box">
-<h3>✨ Configurar Enlace</h3>
-Nombre del Jugador<br><input id="input-player" placeholder="Ej: Juan Perez">
-Tipo<br><select id="select-mode"><option value="aleatorio">Aleatorio (30% Ganar)</option><option value="ganador">Forzar Ganador</option><option value="perdedor">Forzar Sin Premio</option></select>
-Premio<br><select id="select-prize"><option value="5000">Gs. 5.000</option><option value="10000">Gs. 10.000</option><option value="20000">Gs. 20.000</option><option value="50000">Gs. 50.000</option><option value="100000">Gs. 100.000</option><option value="500000">Gs. 500.000</option><option value="1000000">Gs. 1.000.000</option><option value="3000000">Gs. 3.000.000</option><option value="5000000">Gs. 5.000.000</option></select>
-<button class="btnA" onclick="crear()">Generar Enlace Personalizado</button>
+<div id="player-scratch-view" class="w-full max-w-md bg-slate-900/90 rounded-2xl p-6 border border-slate-800 text-center hidden">
+<div class="flex justify-between items-center mb-4 text-xs font-semibold text-slate-400"><span id="scratch-current-status">Raspadita 1 de 1</span><span id="scratch-percent-display" class="bg-slate-800 px-2.5 py-1 rounded-md text-purple-400">Raspado: 0%</span></div>
+<div class="relative w-full aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800/80 touch-none"><div id="symbols-grid" class="absolute inset-0 grid grid-cols-3 grid-rows-3 p-3 gap-2"></div><canvas id="scratch-canvas" class="absolute inset-0 w-full h-full cursor-crosshair z-20"></canvas></div>
+<p class="text-xs text-slate-400 mt-4 animate-pulse">Usa tu dedo para raspar. Al 50% se revela todo.</p>
+<div id="next-action-wrapper" class="mt-5 hidden"><button id="btn-next-card" onclick="advanceNextCardOrFinish()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl">Siguiente</button></div>
 </div>
 
-<div class="box"><h3>Enlaces Activos</h3><div id="lista"></div><button class="btnG" onclick="if(confirm('¿Borrar todo?')){db={};guardar()}">Reiniciar Base de Datos</button></div>
+<div id="blocked-view" class="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-8 text-center hidden">
+<div id="finished-icon" class="text-6xl mb-4">🏆</div>
+<h2 id="finished-title" class="text-2xl font-black text-white mb-2">¡TERMINADO!</h2>
+<p id="finished-subtitle" class="text-lg font-bold text-amber-400">Ganaste 10.000 Gs</p>
+<p class="text-slate-400 text-sm mt-3">Este enlace ya fue utilizado y no se puede volver a raspar.</p>
+<p id="finished-code" class="text-[11px] text-slate-500 mt-4 font-mono"></p>
 </div>
 
-<div id="game-panel" class="oculto">
-<h2 style="text-align:center">¡Tu Raspadita!</h2>
-<p id="welcome" style="text-align:center;color:#facc15"></p>
-<div id="scratch-wrap"><div id="prize-grid"></div><canvas id="canvas"></canvas></div>
-<div id="resultado" class="box oculto" style="text-align:center;margin-top:14px"><h2 id="res-t"></h2><p id="res-s"></p><div id="res-wa"></div></div>
-</div>
-
-<div id="error-panel" class="oculto" style="text-align:center;padding:40px 0"><h2>🔒 Enlace Inválido o Ya Utilizado</h2><p>Pedí un nuevo enlace a tu vendedor.</p></div>
+</main>
+<canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none w-full h-full z-50 hidden"></canvas>
+<footer class="text-center py-4 text-xs text-slate-600 border-t border-slate-900/60">Plataforma Segura de Raspaditas Virtuales &copy; 2026</footer>
 
 <script>
-let db=JSON.parse(localStorage.getItem('db_raspa')||'{}');
-let audio=null;
-function sonido(g){try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),gn=audio.createGain();o.type='triangle';o.frequency.value=g;gn.gain.setValueAtTime(0.15,audio.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,audio.currentTime+0.4);o.connect(gn);gn.connect(audio.destination);o.start();o.stop(audio.currentTime+0.4)}catch(e){}}
-function guardar(){localStorage.setItem('db_raspa',JSON.stringify(db));mostrar()}
-let TEMAS={5000:'🐶',10000:'🐱',20000:'🦊',50000:'🦁',100000:'🐷',500000:'🐼',1000000:'🦄',3000000:'🐉',5000000:'👑'};
-let PREMIOS=[5000,10000,20000,50000,100000,500000,1000000,3000000,5000000];
-function fmt(n){return 'Gs. '+Number(n).toLocaleString('es-PY')}
-function crear(){
-let nombre=document.getElementById('input-player').value||'Jugador Anonimo';
-let modo=document.getElementById('select-mode').value;
-let elegido=Number(document.getElementById('select-prize').value);
-let win=false,premio=0;
-if(modo=='aleatorio'){win=Math.random()<0.3;premio=win?PREMIOS[Math.floor(Math.random()*PREMIOS.length)]:0}
-else if(modo=='ganador'){win=true;premio=elegido}
-let pool=[];
-if(win){pool=[premio,premio,premio];while(pool.length<9){let r=PREMIOS[Math.floor(Math.random()*PREMIOS.length)];if(r!=premio&&pool.filter(x=>x==r).length<2)pool.push(r)}}
-else{while(pool.length<9){let r=PREMIOS[Math.floor(Math.random()*PREMIOS.length)];if(pool.filter(x=>x==r).length<2)pool.push(r)}}
-pool.sort(()=>Math.random()-0.5);
-let id='tkt_'+Date.now();
-db[id]={player:nombre,win:win,prize:premio,symbols:pool,status:'disponible'};
-document.getElementById('input-player').value='';guardar();
-}
-function mostrar(){
-let keys=Object.keys(db).reverse();
-let total=keys.length,totalGs=0,con=0;
-keys.forEach(k=>{if(db[k].win){totalGs+=db[k].prize;con++}});
-document.getElementById('stat-total').innerText=total;
-document.getElementById('stat-premiado').innerText=fmt(totalGs);
-document.getElementById('stat-count').innerText=con+' cartones con premio';
-let h='';
-keys.forEach(k=>{
-let it=db[k];
-let obj={p:it.player,w:it.win,z:it.prize,s:it.symbols};
-let enc=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-let url=location.origin+location.pathname+'?id='+k+'&d='+enc;
-let wa='https://wa.me/?text='+encodeURIComponent('Hola '+it.player+'! Tu raspadita: '+url);
-h+='<div style="border-bottom:1px solid #334155;padding:10px 0"><b>'+it.player+'</b> - '+(it.win?fmt(it.prize):'Sin premio')+' - '+(it.status=='disponible'?'🟢 Disponible':'🔴 Ya raspado')+'<br><button class="btnG" onclick="copiar(\''+url+'\')">📄 Copiar</button> <a href="'+wa+'" target="_blank"><button class="btnV">💬 WhatsApp</button></a> <button class="btnG" onclick="borrar(\''+k+'\')">🗑️</button></div>';
-});
-document.getElementById('lista').innerHTML=h||'Todavía no hay enlaces.';
-}
-function copiar(u){navigator.clipboard?navigator.clipboard.writeText(u).then(()=>alert('¡Copiado!')):prompt('Copiá:',u)}
-function borrar(id){if(confirm('¿Borrar?')){delete db[id];guardar()}}
+// ============ FIREBASE - YA CONFIGURADO ============
+const firebaseConfig = {
+  apiKey: "AIzaSyAxW-J1Rn70S4Bv5cVWtY5h7peSJ3Uo8V8",
+  authDomain: "raspadita-online.firebaseapp.com",
+  databaseURL: "https://raspadita-online-default-rtdb.firebaseio.com",
+  projectId: "raspadita-online",
+  storageBucket: "raspadita-online.firebasestorage.app",
+  messagingSenderId: "930757147695",
+  appId: "1:930757147695:web:d4cd3f1713f215042a9ada"
+};
+// ================================================================
+let dbFirebase = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  dbFirebase = firebase.database();
+}catch(e){ console.log("Firebase no configurado aun", e); }
 
-let params=new URLSearchParams(location.search);
-let tid=params.get('id'), dat=params.get('d');
-let playerData=null, canvas, ctx, dibujando=false, lx=0, ly=0;
+const AudioEngine={ctx:null,init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()},playScratch(){this.init();let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
+playSelect(){this.init();let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)},
+playWinFanfare(){this.init();let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})},
+playLoseSound(){this.init();let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}};
 
-if(tid&&dat){
-document.getElementById('admin-panel').classList.add('oculto');
-let usados=JSON.parse(localStorage.getItem('usados')||'{}');
-if(usados[tid]){document.getElementById('error-panel').classList.remove('oculto')}
-else{
-try{playerData=JSON.parse(decodeURIComponent(escape(atob(dat))))}catch(e){document.getElementById('error-panel').classList.remove('oculto')}
-if(playerData){
-document.getElementById('game-panel').classList.remove('oculto');
-document.getElementById('welcome').innerText='¡Bienvenido/a, '+playerData.p+'!';
-let grid=document.getElementById('prize-grid');
-playerData.s.forEach((v,i)=>{
-let d=document.createElement('div');d.className='cell';d.id='cell-'+i;d.setAttribute('data-v',v);d.innerHTML=TEMAS[v]+'<small>'+fmt(v)+'</small>';grid.appendChild(d);
-});
-iniciarRaspa();
+const DB={getLinks(){let l=localStorage.getItem('scratch_links_v2');return l?JSON.parse(l):{}},saveLinks(l){localStorage.setItem('scratch_links_v2',JSON.stringify(l))},getStats(){let s=localStorage.getItem('scratch_stats_v2');return s?JSON.parse(s):{withPrize:0,withoutPrize:0}},saveStats(s){localStorage.setItem('scratch_stats_v2',JSON.stringify(s))}};
+function getFinished(){try{return JSON.parse(localStorage.getItem('scratch_finished_v2')||'{}')}catch(e){return{}}}
+function saveFinished(id, data){let f=getFinished(); f[id]=data; localStorage.setItem('scratch_finished_v2', JSON.stringify(f));}
+function showFinishedScreen(id, won, prizeAmount){
+  document.getElementById('player-select-view').classList.add('hidden');
+  document.getElementById('player-scratch-view').classList.add('hidden');
+  document.getElementById('blocked-view').classList.remove('hidden');
+  if(won){
+    document.getElementById('finished-icon').innerText='🏆';
+    document.getElementById('finished-title').innerText='¡TERMINADO! ¡GANASTE!';
+    document.getElementById('finished-subtitle').innerText='Ganaste ' + prizeAmount + ' Gs';
+    document.getElementById('finished-subtitle').className='text-lg font-bold text-amber-400';
+  } else {
+    document.getElementById('finished-icon').innerText='🍀';
+    document.getElementById('finished-title').innerText='TERMINADO';
+    document.getElementById('finished-subtitle').innerText='Terminaste Sin Premio';
+    document.getElementById('finished-subtitle').className='text-lg font-bold text-slate-300';
+  }
+  document.getElementById('finished-code').innerText='Código: '+id;
 }
-}
-}else{mostrar()}
 
-function iniciarRaspa(){
-canvas=document.getElementById('canvas');ctx=canvas.getContext('2d');
-let wrap=document.getElementById('scratch-wrap');
-canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;
-ctx.fillStyle='#64748b';ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle='#fff';ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.fillText('⚡ RASPA AQUÍ ⚡',canvas.width/2,canvas.height/2);
-ctx.globalCompositeOperation='destination-out';
-function pos(e){let r=canvas.getBoundingClientRect();let t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
-function start(e){dibujando=true;let p=pos(e);lx=p.x;ly=p.y}
-function move(e){if(!dibujando)return;e.preventDefault();let p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.lineWidth=40;ctx.lineCap='round';ctx.stroke();lx=p.x;ly=p.y;revisar()}
-function end(){dibujando=false}
-canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);canvas.addEventListener('mouseup',end);
-canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end);
+// FIREBASE: Marcar usado en la nube para TODOS los dispositivos
+function marcarUsadoEnNube(id, won, prize){
+  saveFinished(id, {won:won, prize:prize});
+  if(dbFirebase){
+    dbFirebase.ref('raspaditas_usadas/' + id).set({won:won, prize:prize, at: new Date().toISOString()});
+  }
+  let links=DB.getLinks();
+  if(links[id]){ links[id].status='usado'; DB.saveLinks(links); }
 }
-function revisar(){
-let d=ctx.getImageData(0,0,canvas.width,canvas.height);let tot=0;
-for(let i=3;i<d.data.length;i+=4){if(d.data[i]==0)tot++}
-let porc=(tot/(canvas.width*canvas.height))*100;
-if(porc>45)finalizar();
+function consultarNube(id, callback){
+  let fin = getFinished()[id];
+  if(fin){ callback(fin); return; }
+  if(!dbFirebase){ callback(null); return; }
+  dbFirebase.ref('raspaditas_usadas/' + id).once('value').then(snap=>{
+    let v = snap.val();
+    if(v){ saveFinished(id, v); callback(v); }
+    else callback(null);
+  }).catch(()=>callback(null));
 }
-function finalizar(){
-if(canvas.style.display=='none')return;
-let usados=JSON.parse(localStorage.getItem('usados')||'{}');usados[tid]=true;localStorage.setItem('usados',JSON.stringify(usados));
-if(db[tid]){db[tid].status='raspado';localStorage.setItem('db_raspa',JSON.stringify(db))}
-canvas.style.transition='opacity .5s';canvas.style.opacity=0;setTimeout(()=>canvas.style.display='none',500);
-let res=document.getElementById('resultado');res.classList.remove('oculto');
-if(playerData.w){
-for(let i=0;i<9;i++){let c=document.getElementById('cell-'+i);if(Number(c.getAttribute('data-v'))==playerData.z)c.classList.add('win')}
-[523,659,784,1046].forEach((f,i)=>setTimeout(()=>sonido(f),i*120));
-document.getElementById('res-t').innerText='¡FELICIDADES, GANASTE! 🏆';
-document.getElementById('res-s').innerText='Premio: '+fmt(playerData.z);
-document.getElementById('res-wa').innerHTML='<a href="https://wa.me/?text='+encodeURIComponent('Hola! Soy '+playerData.p+' y GANÉ '+fmt(playerData.z)+' Codigo: '+tid)+'" target="_blank"><button class="btnV">💬 Avisar a mi vendedor</button></a>';
-}else{
-document.getElementById('res-t').innerText='¡Intentalo de Nuevo! 🍀';
-document.getElementById('res-s').innerText='Esta vez no coincidieron 3 figuras.';
-document.getElementById('res-wa').innerHTML='<a href="https://wa.me/?text='+encodeURIComponent('Hola! Soy '+playerData.p+' ya raspé, no gané. Codigo: '+tid)+'" target="_blank"><button class="btnG">💬 Avisar a mi vendedor</button></a>';
+
+let currentGenerationTypeWithPrize=true,selectedCartonIndex=null,activeGameLink=null,activeCardIndex=0,isScratchingFinished=false,scratchCanvas=document.getElementById('scratch-canvas'),scratchCtx=scratchCanvas?scratchCanvas.getContext('2d'):null,isDrawing=false,lastX=0,lastY=0;
+const POOL_SIMBOLOS=['🐶','🐱','🦁','🐯','🐼','🐻','🦊','🐰','🐵'],POOL_MONTOS=['5.000','10.000','20.000','50.000','100.000','500.000','1.000.000','3.000.000','5.000.000'];
+window.onload=function(){let p=new URLSearchParams(location.search),t=p.get('card');if(t)loadPlayerView(t);else loadAdminView()};
+function loadAdminView(){
+  document.getElementById('admin-view').classList.remove('hidden');updateAdminStatsDisplay();renderLinksTable();
+  if(dbFirebase){
+    dbFirebase.ref('raspaditas_usadas').on('value', snap=>{
+      let data = snap.val()||{};
+      let links = DB.getLinks();
+      let cambio=false;
+      Object.keys(data).forEach(id=>{
+        if(links[id] && links[id].status!=='usado'){ links[id].status='usado'; cambio=true; }
+        saveFinished(id, data[id]);
+      });
+      if(cambio){ DB.saveLinks(links); renderLinksTable(); }
+      else renderLinksTable();
+    });
+  }
 }
+function setPrizeType(h){currentGenerationTypeWithPrize=h;let b1=document.getElementById('btn-type-prize'),b2=document.getElementById('btn-type-noprize'),w=document.getElementById('wrapper-prize-amount');if(h){b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-amber-500/20 border-amber-500 text-amber-300";b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.remove('hidden')}else{b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-purple-500/20 border-purple-500 text-purple-300";b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.add('hidden')}}
+function updateQtyLabel(v){document.getElementById('qty-label').textContent=v}
+function updateAdminStatsDisplay(){
+  let links=DB.getLinks(),keys=Object.keys(links),totalCartones=0,totalPremiado=0,con=0;
+  keys.forEach(k=>{
+    let l=links[k];
+    totalCartones += Number(l.totalCards || 1);
+    if(l.withPrize){con++;let m=Number(String(l.prizeAmount).replace(/\./g,''));if(!isNaN(m))totalPremiado+=m}
+  });
+  document.getElementById('stat-total').textContent=totalCartones;
+  document.getElementById('stat-total-premiado').textContent=totalPremiado.toLocaleString('es-PY') + " Gs";
+  document.getElementById('stat-premiado-count').textContent=con+" cartones con premio"
 }
+function generateScratchLink(){let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000',id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable()}
+function generateSymbolMatrix(win,prize){let m=[];if(win){let ws=POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)];for(let i=0;i<3;i++)m.push({symbol:ws,amount:prize});let av=POOL_SIMBOLOS.filter(s=>s!==ws);av.sort(()=>Math.random()-.5);for(let i=0;i<6;i++){let a=av[i%av.length],fa=POOL_MONTOS.filter(x=>x!==prize),ra=fa[Math.floor(Math.random()*fa.length)];m.push({symbol:a,amount:ra})}}else{let sp=[...POOL_SIMBOLOS,...POOL_SIMBOLOS].sort(()=>Math.random()-.5),c={};for(let s of sp){if(!c[s])c[s]=0;if(c[s]<2&&m.length<9){m.push({symbol:s,amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]});c[s]++}}while(m.length<9)m.push({symbol:POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)],amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]})}return m.sort(()=>Math.random()-.5)}
+function renderLinksTable(){
+  let links=DB.getLinks(), finished=getFinished(), tbody=document.getElementById('links-table-body'),msg=document.getElementById('no-links-msg');tbody.innerHTML='';
+  let keys=Object.keys(links).reverse();
+  if(keys.length==0){msg.classList.remove('hidden');return}else msg.classList.add('hidden');
+  keys.forEach(k=>{
+    let d=links[k], tr=document.createElement('tr'); tr.className="hover:bg-slate-900/40";
+    let url=location.origin+location.pathname+'?card='+d.token;
+    let badge=d.withPrize?`<span class="text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">Premio (${d.prizeAmount} Gs)</span>`:`<span class="text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Sin Premio</span>`;
+    let fin=finished[k];
+    let isUsed = d.status==='usado' || !!fin;
+    let estadoHtml = isUsed
+      ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - Sin Premio</span>`)
+      : `<span class="text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded">🟢 Disponible</span>`;
+    tr.innerHTML=`<td class="p-3"><div class="font-bold text-white">Paquete de ${d.totalCards} raspadita(s)</div><div class="text-slate-500 text-[10px]">${d.createdAt} | ${badge}</div></td><td class="p-3"><input type="text" readonly value="${url}" onclick="this.select();" class="bg-slate-900 border border-slate-700/60 rounded px-2.5 py-1 text-purple-300 w-full max-w-[240px] text-xs"></td><td class="p-3 text-center">${estadoHtml}</td><td class="p-3 text-right"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">📋 Copiar</button> <button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">✔️ Marcar Usado</button></td>`;
+    tbody.appendChild(tr)
+  })
+}
+function marcarUsado(id){
+  let links=DB.getLinks();
+  if(!links[id]) return;
+  let fin=getFinished()[id];
+  if(!fin){
+    let won=links[id].withPrize;
+    let prize=links[id].prizeAmount;
+    marcarUsadoEnNube(id, won, prize);
+  } else {
+    marcarUsadoEnNube(id, fin.won, fin.prize);
+  }
+  links[id].status='usado';
+  DB.saveLinks(links);
+  renderLinksTable();
+}
+function copyToClipboard(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);if(ok){let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)}else prompt("Copia el enlace:",t)}
+function loadPlayerView(token){
+  let p;try{p=JSON.parse(atob(token))}catch(e){document.getElementById('error-view').classList.remove('hidden');return}
+  consultarNube(p.id, (fin)=>{
+    if(fin){ showFinishedScreen(p.id, fin.won, fin.prize); return; }
+    let played=JSON.parse(localStorage.getItem('scratch_played_tokens')||'{}');
+    if(played[p.id]){ showFinishedScreen(p.id, p.w, p.a); marcarUsadoEnNube(p.id, p.w, p.a); return; }
+    let cards=[],winIdx=p.w?Math.floor(Math.random()*p.q):-1;for(let i=0;i<p.q;i++){let isW=(i===winIdx);cards.push({isWinner:isW,prizeValue:isW?p.a:'0',gridSymbols:generateSymbolMatrix(isW,p.a)})}
+    activeGameLink={id:p.id,token:token,withPrize:p.w,prizeAmount:p.a,totalCards:p.q,cards:cards};activeCardIndex=0;showSelectionScreen()
+  });
+}
+function showSelectionScreen(){document.getElementById('player-scratch-view').classList.add('hidden');document.getElementById('player-select-view').classList.remove('hidden');document.getElementById('player-badge-qty').textContent=`Raspadita ${activeCardIndex+1} de ${activeGameLink.totalCards}`;selectedCartonIndex=null;let b=document.getElementById('btn-confirm-select');b.disabled=true;b.className="w-full max-w-xs bg-slate-800 text-slate-500 font-bold py-3 rounded-xl";b.textContent="Selecciona un cartón";for(let i=0;i<9;i++){document.getElementById(`carton-${i}`).className="shimmer-bg rounded-xl border-2 border-slate-700/60 flex flex-col items-center justify-center p-2 text-slate-300 text-lg font-bold scratch-card"}}
+function selectCarton(ix){AudioEngine.playSelect();selectedCartonIndex=ix;for(let i=0;i<9;i++){let c=document.getElementById(`carton-${i}`);if(i===ix)c.className="bg-purple-900/40 rounded-xl border-2 border-amber-400 text-amber-300 text-lg font-bold scratch-card";else c.className="shimmer-bg rounded-xl border-2 border-slate-800 text-slate-600 flex flex-col items-center justify-center p-2 text-lg font-bold opacity-40"}let b=document.getElementById('btn-confirm-select');b.disabled=false;b.className="w-full max-w-xs bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold py-3 rounded-xl";b.textContent="Confirmar y Raspar Cartón"}
+function goToScratchPhase(){if(selectedCartonIndex===null)return;AudioEngine.playSelect();if(activeCardIndex===0){let pl=JSON.parse(localStorage.getItem('scratch_played_tokens')||'{}');pl[activeGameLink.id]=true;localStorage.setItem('scratch_played_tokens',JSON.stringify(pl))}document.getElementById('player-select-view').classList.add('hidden');document.getElementById('player-scratch-view').classList.remove('hidden');setupScratchCardGame()}
+function setupScratchCardGame(){isScratchingFinished=false;document.getElementById('scratch-current-status').textContent=`Raspadita ${activeCardIndex+1} de ${activeGameLink.totalCards}`;document.getElementById('scratch-percent-display').textContent="Raspado: 0%";document.getElementById('next-action-wrapper').classList.add('hidden');let cur=activeGameLink.cards[activeCardIndex],grid=document.getElementById('symbols-grid');grid.innerHTML='';cur.gridSymbols.forEach((it,ix)=>{let c=document.createElement('div');c.id=`symbol-cell-${ix}`;c.className="bg-slate-900 border border-slate-800/80 rounded-xl flex flex-col items-center justify-center p-1";c.innerHTML=`<span class="text-3xl md:text-4xl">${it.symbol}</span><span class="text-[10px] md:text-xs text-amber-400/90 font-bold mt-1">${it.amount} Gs</span>`;grid.appendChild(c)});scratchCanvas.width=scratchCanvas.offsetWidth;scratchCanvas.height=scratchCanvas.offsetHeight;scratchCtx.globalCompositeOperation='source-over';let g=scratchCtx.createLinearGradient(0,0,scratchCanvas.width,scratchCanvas.height);g.addColorStop(0,'#d97706');g.addColorStop(.5,'#f59e0b');g.addColorStop(1,'#b45309');scratchCtx.fillStyle=g;scratchCtx.fillRect(0,0,scratchCanvas.width,scratchCanvas.height);scratchCtx.font='bold 15px sans-serif';scratchCtx.fillStyle='#451a03';scratchCtx.textAlign='center';scratchCtx.textBaseline='middle';scratchCtx.fillText('RASPA TU ANIMAL DE LA SUERTE',scratchCanvas.width/2,scratchCanvas.height/2);scratchCanvas.addEventListener('mousedown',startScratching);scratchCanvas.addEventListener('mousemove',scratchAction);window.addEventListener('mouseup',stopScratching);scratchCanvas.addEventListener('touchstart',startScratching,{passive:true});scratchCanvas.addEventListener('touchmove',scratchAction,{passive:true});window.addEventListener('touchend',stopScratching)}
+function startScratching(e){if(isScratchingFinished)return;isDrawing=true;let c=getEventCoords(e);lastX=c.x;lastY=c.y}
+function scratchAction(e){if(!isDrawing||isScratchingFinished)return;let c=getEventCoords(e);scratchCtx.globalCompositeOperation='destination-out';scratchCtx.lineWidth=34;scratchCtx.lineCap='round';scratchCtx.lineJoin='round';scratchCtx.beginPath();scratchCtx.moveTo(lastX,lastY);scratchCtx.lineTo(c.x,c.y);scratchCtx.stroke();lastX=c.x;lastY=c.y;if(Math.random()<.35)AudioEngine.playScratch();checkScratchPercentage()}
+function stopScratching(){isDrawing=false}
+function getEventCoords(e){let r=scratchCanvas.getBoundingClientRect(),x=e.touches?e.touches[0].clientX:e.clientX,y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top}}
+function checkScratchPercentage(){let w=scratchCanvas.width,h=scratchCanvas.height,d=scratchCtx.getImageData(0,0,w,h).data,trans=0,tot=0;for(let i=3;i<d.length;i+=80){tot++;if(d[i]==0)trans++}let p=Math.round(trans/tot*100);document.getElementById('scratch-percent-display').textContent=`Raspado: ${p}%`;if(p>=50&&!isScratchingFinished)autoRevealAll()}
+function autoRevealAll(){isScratchingFinished=true;isDrawing=false;scratchCtx.clearRect(0,0,scratchCanvas.width,scratchCanvas.height);document.getElementById('scratch-percent-display').textContent="Raspado: 100%";evaluateCardResult()}
+function evaluateCardResult(){
+  let cd=activeGameLink.cards[activeCardIndex],counts={},win=null;
+  cd.gridSymbols.forEach(it=>{counts[it.symbol]=(counts[it.symbol]||0)+1;if(counts[it.symbol]>=3)win=it.symbol});
+  if(cd.isWinner&&win){
+    AudioEngine.playWinFanfare();triggerConfettiAnimation();
+    cd.gridSymbols.forEach((it,ix)=>{if(it.symbol===win)document.getElementById(`symbol-cell-${ix}`).classList.add('winner-pulse')});
+    setTimeout(()=>showCelebrationModal(cd.prizeValue),400)
+  } else {
+    AudioEngine.playLoseSound();
+    setTimeout(()=>showLoseModal(),400);
+  }
+  document.getElementById('next-action-wrapper').classList.remove('hidden');
+  let n=document.getElementById('btn-next-card');
+  if(activeCardIndex+1<activeGameLink.totalCards)n.textContent="Ir a Siguiente Raspadita ➡️";
+  else{n.textContent="Finalizar y Ver Resultado 🏁";n.className="w-full bg-amber-500 text-slate-950 font-extrabold py-3 rounded-xl"}
+}
+function showCelebrationModal(a){let o=document.createElement('div');o.id="celebration-overlay";o.className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50";o.innerHTML=`<div class="bg-gradient-to-b from-slate-900 to-indigo-950 p-8 rounded-2xl border-2 border-amber-400 max-w-sm w-full text-center"><div class="text-6xl mb-3 animate-bounce">🏆</div><h3 class="text-3xl font-extrabold text-amber-400 gold-text uppercase">¡Felicidades!</h3><p class="text-white text-lg font-semibold mt-2">¡GANASTE ${a} Gs!</p><button onclick="closeCelebrationModal()" class="mt-6 w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-lg">Continuar</button></div>`;document.body.appendChild(o)}
+function showLoseModal(){let o=document.createElement('div');o.id="celebration-overlay";o.className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50";o.innerHTML=`<div class="bg-slate-900 p-8 rounded-2xl border-2 border-slate-700 max-w-sm w-full text-center"><div class="text-6xl mb-3">🍀</div><h3 class="text-3xl font-extrabold text-white uppercase">Sin Premio</h3><p class="text-slate-300 text-sm mt-2">Sigue intentando, ¡tu suerte puede cambiar en la siguiente raspadita!</p><button onclick="closeCelebrationModal()" class="mt-6 w-full bg-purple-600 text-white font-extrabold py-2.5 rounded-lg">Continuar</button></div>`;document.body.appendChild(o)}
+function closeCelebrationModal(){let m=document.getElementById('celebration-overlay');if(m)m.remove()}
+function advanceNextCardOrFinish(){
+  closeCelebrationModal(); activeCardIndex++;
+  if(activeCardIndex<activeGameLink.totalCards) showSelectionScreen();
+  else {
+    let won = activeGameLink.withPrize;
+    let prize = activeGameLink.prizeAmount;
+    marcarUsadoEnNube(activeGameLink.id, won, prize);
+    showFinishedScreen(activeGameLink.id, won, prize);
+  }
+}
+function triggerConfettiAnimation(){let c=document.getElementById('confetti-canvas');c.classList.remove('hidden');let ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let parts=[],cols=['#fbbf24','#f59e0b','#8b5cf6','#ec4899','#3b82f6'];for(let i=0;i<120;i++)parts.push({x:Math.random()*c.width,y:Math.random()*c.height-c.height,r:Math.random()*6+4,d:Math.random()*c.height,color:cols[Math.floor(Math.random()*cols.length)],tilt:0,tiltAngle:0,inc:Math.random()*.07+.02});function draw(){ctx.clearRect(0,0,c.width,c.height);parts.forEach((p,ix)=>{p.tiltAngle+=p.inc;p.y+=(Math.cos(p.d)+3+p.r/2)/2;p.x+=Math.sin(p.tiltAngle);p.tilt=Math.sin(p.tiltAngle-ix/3)*15;ctx.beginPath();ctx.lineWidth=p.r;ctx.strokeStyle=p.color;ctx.moveTo(p.x+p.tilt+p.r/2,p.y);ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/2);ctx.stroke()});parts=parts.filter(p=>p.y<=c.height);if(parts.length>0&&isScratchingFinished)requestAnimationFrame(draw);else c.classList.add('hidden')}draw()}
 </script>
 </body>
 </html>
