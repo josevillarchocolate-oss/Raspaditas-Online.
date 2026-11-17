@@ -21,6 +21,7 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 .roulette-center{background:radial-gradient(circle at 35% 30%, #fef3c7, #f59e0b 45%, #b45309 75%, #451a03);border:3px solid #fde68a;box-shadow:0 0 15px rgba(251,191,36,.8), inset 0 0 10px rgba(0,0,0,.5)}
 .wheel-pointer{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fde68a;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 .wheel-pointer::after{content:'';position:absolute;top:-28px;left:-5px;width:10px;height:10px;background:#451a03;border-radius:9999px}
+.link-card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:14px;margin-bottom:12px}
 </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -69,11 +70,9 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <button onclick="generateScratchLink()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg">🚀 Crear Enlace Único</button>
 </div></div>
 <div class="lg:col-span-2 flex flex-col"><h2 class="text-lg font-bold text-white mb-4">🔗 Enlaces Activos Creados</h2>
-<div class="flex-grow overflow-x-auto bg-slate-950/30 border border-slate-800/80 rounded-xl max-h-[380px] overflow-y-auto">
-<table class="w-full text-left"><thead><tr class="bg-slate-950 text-slate-400 uppercase text-[10px] border-b border-slate-800"><th class="p-3">ID / Configuración</th><th class="p-3">Destino / Enlace</th><th class="p-3 text-center">Estado Global</th><th class="p-3 text-right">Acción</th></tr></thead>
-<tbody id="links-table-body" class="text-xs divide-y divide-slate-800/60"></tbody></table>
+<div id="links-list" class="flex-grow max-h-[420px] overflow-y-auto pr-1"></div>
 <div id="no-links-msg" class="text-center py-12 text-slate-500 hidden">No has generado ningún enlace todavía.</div>
-</div></div>
+</div>
 </div></div>
 
 <div id="error-view" class="w-full max-w-md bg-slate-900/90 border border-red-500/30 rounded-2xl p-8 text-center hidden"><div class="text-3xl mb-4">⚠️</div><h2 class="text-2xl font-bold text-white mb-2">Enlace no válido</h2><p id="error-message-text" class="text-slate-400 text-sm">Este token ya fue utilizado.</p></div>
@@ -93,7 +92,6 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <p class="text-[11px] text-slate-500 mt-5">Podés salir y volver a entrar mientras no termines tus raspaditas / giros. Al terminar, el enlace queda bloqueado.</p>
 </div>
 
-<!-- CARTEL VOLVISTE - AHORA ES UN POPUP POR ENCIMA DE TODO CON BOTON OK -->
 <div id="resume-banner" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-[100] hidden">
   <div class="bg-slate-900 p-8 rounded-2xl border-2 border-amber-400 max-w-sm w-full text-center shadow-2xl">
     <div class="text-6xl mb-3">👋</div>
@@ -162,6 +160,8 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <p id="finished-code" class="text-[11px] text-slate-500 mt-4 font-mono"></p>
 </div>
 
+<div id="toast-copiado" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white font-black px-6 py-4 rounded-2xl shadow-2xl z-[200] hidden text-center">✅ Enlace copiado<br><span class="text-xs font-normal">Ya podés pegarlo en WhatsApp</span></div>
+
 </main>
 <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none w-full h-full z-50 hidden"></canvas>
 <footer class="text-center py-4 text-xs text-slate-600 border-t border-slate-900/60">Plataforma Segura de Raspaditas Virtuales &copy; 2026</footer>
@@ -191,7 +191,9 @@ function doLogout(){
 const firebaseConfig = { apiKey: "AIzaSyAxW-J1Rn70S4Bv5cVWtY5h7peSJ3Uo8V8", authDomain: "raspadita-online.firebaseapp.com", databaseURL: "https://raspadita-online-default-rtdb.firebaseio.com", projectId: "raspadita-online", storageBucket: "raspadita-online.firebasestorage.app", messagingSenderId: "930757147695", appId: "1:930757147695:web:d4cd3f1713f215042a9ada" };
 let dbFirebase = null;
 try{ firebase.initializeApp(firebaseConfig); dbFirebase = firebase.database(); }catch(e){ console.log("Firebase no configurado", e); }
-const AudioEngine={ctx:null,init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()},playScratch(){this.init();let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
+const AudioEngine={ctx:null,init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()},
+playTick(){this.init(); try{ let o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type='square'; o.frequency.setValueAtTime(1400,this.ctx.currentTime); g.gain.setValueAtTime(.05,this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.04); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+.05); }catch(e){} },
+playScratch(){this.init();let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
 playSelect(){this.init();let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)},
 playWinFanfare(){this.init();let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})},
 playLoseSound(){this.init();let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}};
@@ -211,7 +213,6 @@ function clearProgress(id){
   let all = getProgressAll(); delete all[id]; localStorage.setItem('scratch_progress_v3', JSON.stringify(all));
   if(dbFirebase){ dbFirebase.ref('raspaditas_progreso/' + id).remove(); }
 }
-// NUEVO: Cierra el popup de Volviste y deja seguir jugando
 function closeResumeBanner(){
   AudioEngine.playSelect();
   document.getElementById('resume-banner').classList.add('hidden');
@@ -300,18 +301,21 @@ function updateAdminStatsDisplay(){
 function generateScratchLink(){let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000',id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable()}
 function generateSymbolMatrix(win,prize){let m=[];if(win){let ws=POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)];for(let i=0;i<3;i++)m.push({symbol:ws,amount:prize});let av=POOL_SIMBOLOS.filter(s=>s!==ws);av.sort(()=>Math.random()-.5);for(let i=0;i<6;i++){let a=av[i%av.length],fa=POOL_MONTOS.filter(x=>x!==prize),ra=fa[Math.floor(Math.random()*fa.length)];m.push({symbol:a,amount:ra})}}else{let sp=[...POOL_SIMBOLOS,...POOL_SIMBOLOS].sort(()=>Math.random()-.5),c={};for(let s of sp){if(!c[s])c[s]=0;if(c[s]<2&&m.length<9){m.push({symbol:s,amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]});c[s]++}}while(m.length<9)m.push({symbol:POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)],amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]})}return m.sort(()=>Math.random()-.5)}
 function renderLinksTable(){
-  let links=DB.getLinks(), finished=getFinished(), tbody=document.getElementById('links-table-body'),msg=document.getElementById('no-links-msg');tbody.innerHTML='';
+  let links=DB.getLinks(), finished=getFinished(), list=document.getElementById('links-list'),msg=document.getElementById('no-links-msg');
+  list.innerHTML='';
   let keys=Object.keys(links).reverse();
   if(keys.length==0){msg.classList.remove('hidden');return}else msg.classList.add('hidden');
   keys.forEach(k=>{
-    let d=links[k], tr=document.createElement('tr'); tr.className="hover:bg-slate-900/40";
+    let d=links[k];
     let url=location.origin+location.pathname+'?card='+d.token;
-    let badge=d.withPrize?`<span class="text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">Premio (${d.prizeAmount} Gs)</span>`:`<span class="text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Sin Premio</span>`;
+    let badge=d.withPrize?`<span class="text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md text-xs font-bold">🎁 Premio (${d.prizeAmount} Gs)</span>`:`<span class="text-slate-400 bg-slate-800 px-2 py-1 rounded-md text-xs font-bold">❌ Sin Premio</span>`;
     let fin=finished[k];
     let isUsed = d.status==='usado' || !!fin;
-    let estadoHtml = isUsed ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - ${fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - ${fin && fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Sin Premio</span>`) : `<span class="text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded">🟢 Disponible</span>`;
-    tr.innerHTML=`<td class="p-3"><div class="font-bold text-white">${d.totalCards} raspadita(s) o ${d.totalCards} giro(s) Ruleta</div><div class="text-slate-500 text-[10px]">${d.createdAt} | ${badge}</div></td><td class="p-3"><input type="text" readonly value="${url}" onclick="this.select();" class="bg-slate-900 border border-slate-700/60 rounded px-2.5 py-1 text-purple-300 w-full max-w-[240px] text-xs"></td><td class="p-3 text-center">${estadoHtml}</td><td class="p-3 text-right"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">📋 Copiar</button> <button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">✔️ Marcar Usado</button></td>`;
-    tbody.appendChild(tr)
+    let estadoHtml = isUsed ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin && fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Sin Premio</span>`) : `<span class="text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full text-xs font-bold">🟢 Disponible</span>`;
+    let card=document.createElement('div');
+    card.className="link-card";
+    card.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="font-bold text-white text-sm">🎰 ${d.totalCards} raspadita(s) o ${d.totalCards} giro(s) Ruleta</span>${estadoHtml}</div><div class="flex flex-wrap items-center gap-2 mb-3"><span class="text-slate-500 text-xs">${d.createdAt}</span>${badge}</div><input type="text" readonly value="${url}" onclick="this.select();" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-300 text-xs mb-3"><div class="grid grid-cols-2 gap-2"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">📋 Copiar</button><button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">✔️ Marcar Usado</button></div>`;
+    list.appendChild(card);
   })
 }
 function marcarUsado(id){
@@ -320,7 +324,7 @@ function marcarUsado(id){
   if(!fin){ marcarUsadoEnNube(id, links[id].withPrize, links[id].prizeAmount, 'raspadita', links[id].totalCards); } else { marcarUsadoEnNube(id, fin.won, fin.prize, fin.mode||'raspadita', fin.total||links[id].totalCards); }
   links[id].status='usado'; DB.saveLinks(links); renderLinksTable();
 }
-function copyToClipboard(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);if(ok){let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)}else prompt("Copia el enlace:",t)}
+function copyToClipboard(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);if(ok){let toast=document.getElementById('toast-copiado');if(toast){toast.classList.remove('hidden');setTimeout(()=>{toast.classList.add('hidden');},2000);}let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)}else prompt("Copia el enlace:",t)}
 function loadPlayerView(token){
   let p;try{p=JSON.parse(atob(token))}catch(e){document.getElementById('error-view').classList.remove('hidden');return}
   consultarNube(p.id, (fin)=>{
@@ -345,7 +349,6 @@ function loadPlayerView(token){
       if(activeCardIndex >= activeGameLink.totalCards){
         let won = activeGameLink.withPrize; marcarUsadoEnNube(activeGameLink.id, won, activeGameLink.prizeAmount, 'raspadita', activeGameLink.totalCards); showFinishedScreen(activeGameLink.id, won, activeGameLink.prizeAmount, 'raspadita', activeGameLink.totalCards); return;
       }
-      // MUESTRA EL POPUP POR ENCIMA DE TODO - el juego ya está cargado atrás
       document.getElementById('resume-banner').classList.remove('hidden');
       document.getElementById('resume-text').textContent = `Ya jugaste ${activeCardIndex} de ${activeGameLink.totalCards} raspaditas. Te faltan ${activeGameLink.totalCards-activeCardIndex}. ¡Seguí!`;
       showSelectionScreen();
@@ -385,6 +388,7 @@ function chooseModeRuleta(){
 }
 let rouletteSegments=[], rouletteAngle=0, rouletteSpinning=false, rouletteResult=null;
 let rouletteTotalSpins=1;
+let lastTickSegment=-1;
 function buildRouletteSegments(){
   let prize = activeGameLink.prizeAmount;
   let allAmounts = ['5.000','10.000','20.000','30.000','50.000','100.000','200.000','300.000','500.000','1.000.000','2.000.000','3.000.000','4.000.000','5.000.000'];
@@ -414,6 +418,10 @@ function drawRoulette(){
     ctx.fillText(s.label, R-8, 3); ctx.restore();
   });
   ctx.beginPath(); ctx.arc(cx,cy,R-1,0,Math.PI*2); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=4; ctx.stroke();
+  if(rouletteSpinning){
+    let currentSeg = Math.floor((((rouletteAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2)) / segAngle);
+    if(currentSeg!==lastTickSegment){ lastTickSegment=currentSeg; AudioEngine.playTick(); }
+  }
 }
 function updateRouletteCounter(){
   document.getElementById('roulette-counter').textContent = `${rouletteCurrentSpin} de ${rouletteTotalSpins} giros disponibles`;
@@ -449,7 +457,8 @@ function setupRouletteResume(){
 function spinRoulette(){
   if(rouletteSpinning) return;
   if(rouletteCurrentSpin >= rouletteTotalSpins) return;
-  rouletteSpinning=true;
+  AudioEngine.init();
+  rouletteSpinning=true; lastTickSegment=-1;
   document.getElementById('btn-spin').disabled=true; document.getElementById('btn-spin').textContent='Girando... 🎡';
   document.getElementById('roulette-next-wrapper').classList.add('hidden');
   document.getElementById('roulette-finish-wrapper').classList.add('hidden');
@@ -468,12 +477,12 @@ function spinRoulette(){
   let pointerAngle = -Math.PI/2;
   let needed = pointerAngle - targetCenter;
   while(needed < 0) needed += Math.PI*2;
-  let finalAngle = rouletteAngle + Math.PI*2*7 + (needed - (rouletteAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
-  let startAngle = rouletteAngle, diff = finalAngle - startAngle, duration=5000, startTime=null;
+  let finalAngle = rouletteAngle + Math.PI*2*8 + (needed - (rouletteAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+  let startAngle = rouletteAngle, diff = finalAngle - startAngle, duration=8000, startTime=null;
   function animate(ts){
     if(!startTime) startTime=ts;
     let t=(ts-startTime)/duration; if(t>1) t=1;
-    let ease = 1 - Math.pow(1-t, 4);
+    let ease = 1 - Math.pow(1-t, 5);
     rouletteAngle = startAngle + diff*ease;
     drawRoulette();
     if(t<1){ requestAnimationFrame(animate); } else { onRouletteEnd(targetIndex, isWinningSpin); }
