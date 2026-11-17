@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plataforma de Raspaditas Online</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap');
 body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
@@ -41,10 +43,10 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 </form>
 </div>
 
-<div id="admin-view" class="w-full bg-slate-900/80 rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl hidden">
+<div id="admin-view" class="w-full bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl hidden">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-6 mb-6 gap-4">
 <div><h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">🎰 <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-400">Panel de Control de Raspaditas</span></h1><p class="text-slate-400 text-sm mt-1">Genera y administra los accesos únicos para los jugadores.</p></div>
-<div class="flex items-center gap-2"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Bloqueo Global Activo - Firebase</span><button onclick="doLogout()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-700">Cerrar sesión</button></div>
+<div class="flex items-center gap-2"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Bloqueo Global Activo - Firebase</span><button onclick="doLogout()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-700">Cerrar sesión</button></div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
 <div class="bg-slate-950 p-5 rounded-xl border border-slate-800/60 text-center"><p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total de Cartones Generados</p><p id="stat-total" class="text-4xl font-black text-white mt-1">0</p><p class="text-[11px] text-slate-500 mt-1">Cartones vendidos en total</p></div>
@@ -91,6 +93,7 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <p class="text-[11px] text-slate-500 mt-5">Podés salir y volver a entrar mientras no termines tus raspaditas / giros. Al terminar, el enlace queda bloqueado.</p>
 </div>
 
+<!-- CARTEL VOLVISTE - AHORA ES UN POPUP POR ENCIMA DE TODO CON BOTON OK -->
 <div id="resume-banner" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-[100] hidden">
   <div class="bg-slate-900 p-8 rounded-2xl border-2 border-amber-400 max-w-sm w-full text-center shadow-2xl">
     <div class="text-6xl mb-3">👋</div>
@@ -159,42 +162,11 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <p id="finished-code" class="text-[11px] text-slate-500 mt-4 font-mono"></p>
 </div>
 
-<!-- VENTANITA ENLACE COPIADO -->
-<div id="toast-copiado" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white font-black px-6 py-4 rounded-2xl shadow-2xl z-[200] hidden text-center">
-  ✅ Enlace copiado<br><span class="text-xs font-normal">Ya podés pegarlo en WhatsApp</span>
-</div>
-
 </main>
 <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none w-full h-full z-50 hidden"></canvas>
 <footer class="text-center py-4 text-xs text-slate-600 border-t border-slate-900/60">Plataforma Segura de Raspaditas Virtuales &copy; 2026</footer>
 
 <script>
-let dbFirebase=null, firebaseLoaded=false;
-function loadFirebaseLazy(){
-  if(firebaseLoaded) return;
-  firebaseLoaded=true;
-  let s1=document.createElement('script'); s1.src='https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
-  s1.onload=function(){
-    let s2=document.createElement('script'); s2.src='https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';
-    s2.onload=function(){
-      try{
-        firebase.initializeApp({ apiKey: "AIzaSyAxW-J1Rn70S4Bv5cVWtY5h7peSJ3Uo8V8", authDomain: "raspadita-online.firebaseapp.com", databaseURL: "https://raspadita-online-default-rtdb.firebaseio.com", projectId: "raspadita-online", storageBucket: "raspadita-online.firebasestorage.app", messagingSenderId: "930757147695", appId: "1:930757147695:web:d4cd3f1713f215042a9ada" });
-        dbFirebase=firebase.database();
-        if(!document.getElementById('admin-view').classList.contains('hidden') && !window._firebaseListenerOn){
-          window._firebaseListenerOn=true;
-          dbFirebase.ref('raspaditas_usadas').on('value', snap=>{
-            let data=snap.val()||{}, links=DB.getLinks(), cambio=false;
-            Object.keys(data).forEach(id=>{ if(links[id] && links[id].status!=='usado'){ links[id].status='usado'; cambio=true; } saveFinished(id,data[id]); });
-            if(cambio){ DB.saveLinks(links); renderLinksTable(); }
-          });
-        }
-      }catch(e){}
-    };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s1);
-}
-setTimeout(loadFirebaseLazy, 1500);
 const ADMIN_USER = "raspaditas19";
 const ADMIN_PASS = "190419";
 function isAdminLogged(){ return localStorage.getItem('raspadita_admin_session')==='ok'; }
@@ -216,28 +188,34 @@ function doLogout(){
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
 }
-const AudioEngine={ctx:null,init(){if(!this.ctx)try{this.ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},playTick(){this.init(); if(!this.ctx) return; try{ let o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type='square'; o.frequency.setValueAtTime(1200,this.ctx.currentTime); g.gain.setValueAtTime(.06,this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.04); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+.05); }catch(e){} },
-playScratch(){this.init(); if(!this.ctx) return; try{let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()}catch(e){}},
-playSelect(){this.init(); if(!this.ctx) return; try{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)}catch(e){}},
-playWinFanfare(){this.init(); if(!this.ctx) return; try{let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})}catch(e){}},
-playLoseSound(){this.init(); if(!this.ctx) return; try{let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}catch(e){}}};
-const DB={getLinks(){try{let l=localStorage.getItem('scratch_links_v2');return l?JSON.parse(l):{}}catch(e){return{}}},saveLinks(l){try{localStorage.setItem('scratch_links_v2',JSON.stringify(l))}catch(e){}},getStats(){try{let s=localStorage.getItem('scratch_stats_v2');return s?JSON.parse(s):{withPrize:0,withoutPrize:0}}catch(e){return{withPrize:0,withoutPrize:0}}},saveStats(s){try{localStorage.setItem('scratch_stats_v2',JSON.stringify(s))}catch(e){}}};
+const firebaseConfig = { apiKey: "AIzaSyAxW-J1Rn70S4Bv5cVWtY5h7peSJ3Uo8V8", authDomain: "raspadita-online.firebaseapp.com", databaseURL: "https://raspadita-online-default-rtdb.firebaseio.com", projectId: "raspadita-online", storageBucket: "raspadita-online.firebasestorage.app", messagingSenderId: "930757147695", appId: "1:930757147695:web:d4cd3f1713f215042a9ada" };
+let dbFirebase = null;
+try{ firebase.initializeApp(firebaseConfig); dbFirebase = firebase.database(); }catch(e){ console.log("Firebase no configurado", e); }
+const AudioEngine={ctx:null,init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()},playScratch(){this.init();let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
+playSelect(){this.init();let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)},
+playWinFanfare(){this.init();let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})},
+playLoseSound(){this.init();let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}};
+const DB={getLinks(){let l=localStorage.getItem('scratch_links_v2');return l?JSON.parse(l):{}},saveLinks(l){localStorage.setItem('scratch_links_v2',JSON.stringify(l))},getStats(){let s=localStorage.getItem('scratch_stats_v2');return s?JSON.parse(s):{withPrize:0,withoutPrize:0}},saveStats(s){localStorage.setItem('scratch_stats_v2',JSON.stringify(s))}};
 function getFinished(){try{return JSON.parse(localStorage.getItem('scratch_finished_v2')||'{}')}catch(e){return{}}}
-function saveFinished(id, data){let f=getFinished(); f[id]=data; try{localStorage.setItem('scratch_finished_v2', JSON.stringify(f));}catch(e){}}
+function saveFinished(id, data){let f=getFinished(); f[id]=data; localStorage.setItem('scratch_finished_v2', JSON.stringify(f));}
 function getProgressAll(){ try{ return JSON.parse(localStorage.getItem('scratch_progress_v3')||'{}'); }catch(e){ return {}; } }
 function getProgress(id){ return getProgressAll()[id] || null; }
 function saveProgress(){
   if(!activeGameLink) return;
   let all = getProgressAll();
   all[activeGameLink.id] = { id: activeGameLink.id, mode: currentMode, cardIndex: activeCardIndex, rouletteCurrentSpin: rouletteCurrentSpin, rouletteWinSpinIndex: rouletteWinSpinIndex, rouletteAlreadyWon: rouletteAlreadyWon, cards: activeGameLink.cards, finished: false, updatedAt: new Date().toISOString() };
-  try{localStorage.setItem('scratch_progress_v3', JSON.stringify(all));}catch(e){}
-  if(dbFirebase){ try{dbFirebase.ref('raspaditas_progreso/' + activeGameLink.id).set(all[activeGameLink.id]);}catch(e){} }
+  localStorage.setItem('scratch_progress_v3', JSON.stringify(all));
+  if(dbFirebase){ dbFirebase.ref('raspaditas_progreso/' + activeGameLink.id).set(all[activeGameLink.id]); }
 }
 function clearProgress(id){
-  let all = getProgressAll(); delete all[id]; try{localStorage.setItem('scratch_progress_v3', JSON.stringify(all));}catch(e){}
-  if(dbFirebase){ try{dbFirebase.ref('raspaditas_progreso/' + id).remove();}catch(e){} }
+  let all = getProgressAll(); delete all[id]; localStorage.setItem('scratch_progress_v3', JSON.stringify(all));
+  if(dbFirebase){ dbFirebase.ref('raspaditas_progreso/' + id).remove(); }
 }
-function closeResumeBanner(){ AudioEngine.playSelect(); document.getElementById('resume-banner').classList.add('hidden'); }
+// NUEVO: Cierra el popup de Volviste y deja seguir jugando
+function closeResumeBanner(){
+  AudioEngine.playSelect();
+  document.getElementById('resume-banner').classList.add('hidden');
+}
 function showFinishedScreen(id, won, prizeAmount, mode, total){
   document.getElementById('player-select-view').classList.add('hidden');
   document.getElementById('player-scratch-view').classList.add('hidden');
@@ -248,8 +226,13 @@ function showFinishedScreen(id, won, prizeAmount, mode, total){
   let m = mode || currentMode || 'raspadita';
   let tot = total || (activeGameLink ? activeGameLink.totalCards : 1);
   let badge = document.getElementById('finished-game-type');
-  if(m==='ruleta'){ badge.textContent = '🎡 RULETA'; badge.className = 'inline-block bg-amber-500/20 text-amber-300 text-xs font-black px-4 py-1.5 rounded-full border border-amber-500/40 tracking-widest'; }
-  else { badge.textContent = '🎰 RASPADITA'; badge.className = 'inline-block bg-purple-500/20 text-purple-300 text-xs font-black px-4 py-1.5 rounded-full border border-purple-500/40 tracking-widest'; }
+  if(m==='ruleta'){
+    badge.textContent = '🎡 RULETA';
+    badge.className = 'inline-block bg-amber-500/20 text-amber-300 text-xs font-black px-4 py-1.5 rounded-full border border-amber-500/40 tracking-widest';
+  } else {
+    badge.textContent = '🎰 RASPADITA';
+    badge.className = 'inline-block bg-purple-500/20 text-purple-300 text-xs font-black px-4 py-1.5 rounded-full border border-purple-500/40 tracking-widest';
+  }
   document.getElementById('finished-count').textContent = tot + ' de ' + tot + (m==='ruleta' ? ' giros' : ' raspaditas');
   if(won){
     document.getElementById('finished-icon').innerText='🏆';
@@ -270,7 +253,7 @@ function marcarUsadoEnNube(id, won, prize, mode, total){
   let m = mode || currentMode || 'raspadita';
   let tot = total || (activeGameLink ? activeGameLink.totalCards : 1);
   saveFinished(id, {won:won, prize:prize, mode:m, total:tot});
-  if(dbFirebase){ try{dbFirebase.ref('raspaditas_usadas/' + id).set({won:won, prize:prize, mode:m, total:tot, at: new Date().toISOString()});}catch(e){} }
+  if(dbFirebase){ dbFirebase.ref('raspaditas_usadas/' + id).set({won:won, prize:prize, mode:m, total:tot, at: new Date().toISOString()}); }
   let links=DB.getLinks();
   if(links[id]){ links[id].status='usado'; DB.saveLinks(links); }
   clearProgress(id);
@@ -278,7 +261,7 @@ function marcarUsadoEnNube(id, won, prize, mode, total){
 function consultarNube(id, callback){
   let fin = getFinished()[id];
   if(fin){ callback(fin); return; }
-  if(!dbFirebase){ setTimeout(()=>{ if(dbFirebase){ consultarNube(id, callback); } else { callback(null); } }, 800); return; }
+  if(!dbFirebase){ callback(null); return; }
   dbFirebase.ref('raspaditas_usadas/' + id).once('value').then(snap=>{
     let v = snap.val();
     if(v){ saveFinished(id, v); callback(v); }
@@ -288,51 +271,38 @@ function consultarNube(id, callback){
 let currentGenerationTypeWithPrize=true,selectedCartonIndex=null,activeGameLink=null,activeCardIndex=0,isScratchingFinished=false,scratchCanvas=document.getElementById('scratch-canvas'),scratchCtx=scratchCanvas?scratchCanvas.getContext('2d'):null,isDrawing=false,lastX=0,lastY=0;
 let currentMode=null;
 const POOL_SIMBOLOS=['🐶','🐱','🦁','🐯','🐼','🐻','🦊','🐰','🐵'],POOL_MONTOS=['5.000','10.000','20.000','50.000','100.000','500.000','1.000.000','3.000.000','5.000.000'];
-window.onload=function(){
-  let p=new URLSearchParams(location.search),t=p.get('card');
-  if(t){ loadPlayerView(t); }
-  else if(isAdminLogged() || sessionStorage.getItem('raspadita_admin_session')==='ok'){ loadAdminView(); }
-  else {document.getElementById('login-view').classList.remove('hidden');document.getElementById('login-user').value='';document.getElementById('login-pass').value='';}
-};
+window.onload=function(){let p=new URLSearchParams(location.search),t=p.get('card');if(t)loadPlayerView(t);else if(isAdminLogged() || sessionStorage.getItem('raspadita_admin_session')==='ok') loadAdminView(); else {document.getElementById('login-view').classList.remove('hidden');document.getElementById('login-user').value='';document.getElementById('login-pass').value='';}};
 function loadAdminView(){
-  document.getElementById('admin-view').classList.remove('hidden');
-  requestAnimationFrame(()=>{ updateAdminStatsDisplay(); renderLinksTable(); });
-  loadFirebaseLazy();
-}
-function setPrizeType(h){
-  if(currentGenerationTypeWithPrize===h) return;
-  currentGenerationTypeWithPrize=h;
-  let b1=document.getElementById('btn-type-prize'),b2=document.getElementById('btn-type-noprize'),w=document.getElementById('wrapper-prize-amount');
-  if(h){
-    b1.classList.remove('bg-slate-900','border-slate-700','text-slate-400'); b1.classList.add('bg-amber-500/20','border-amber-500','text-amber-300');
-    b2.classList.remove('bg-purple-500/20','border-purple-500','text-purple-300'); b2.classList.add('bg-slate-900','border-slate-700','text-slate-400');
-    w.classList.remove('hidden');
-  }else{
-    b2.classList.remove('bg-slate-900','border-slate-700','text-slate-400'); b2.classList.add('bg-purple-500/20','border-purple-500','text-purple-300');
-    b1.classList.remove('bg-amber-500/20','border-amber-500','text-amber-300'); b1.classList.add('bg-slate-900','border-slate-700','text-slate-400');
-    w.classList.add('hidden');
+  document.getElementById('admin-view').classList.remove('hidden');updateAdminStatsDisplay();renderLinksTable();
+  if(dbFirebase){
+    dbFirebase.ref('raspaditas_usadas').on('value', snap=>{
+      let data = snap.val()||{};
+      let links = DB.getLinks();
+      let cambio=false;
+      Object.keys(data).forEach(id=>{
+        if(links[id] && links[id].status!=='usado'){ links[id].status='usado'; cambio=true; }
+        saveFinished(id, data[id]);
+      });
+      if(cambio){ DB.saveLinks(links); renderLinksTable(); }
+      else renderLinksTable();
+    });
   }
 }
+function setPrizeType(h){currentGenerationTypeWithPrize=h;let b1=document.getElementById('btn-type-prize'),b2=document.getElementById('btn-type-noprize'),w=document.getElementById('wrapper-prize-amount');if(h){b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-amber-500/20 border-amber-500 text-amber-300";b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.remove('hidden')}else{b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-purple-500/20 border-purple-500 text-purple-300";b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.add('hidden')}}
 function updateQtyLabel(v){document.getElementById('qty-label').textContent=v}
 function updateAdminStatsDisplay(){
   let links=DB.getLinks(),keys=Object.keys(links),totalCartones=0,totalPremiado=0,con=0;
-  for(let k of keys){ let l=links[k]; totalCartones += Number(l.totalCards || 1); if(l.withPrize){con++;let m=Number(String(l.prizeAmount).replace(/\./g,''));if(!isNaN(m))totalPremiado+=m} }
+  keys.forEach(k=>{ let l=links[k]; totalCartones += Number(l.totalCards || 1); if(l.withPrize){con++;let m=Number(String(l.prizeAmount).replace(/\./g,''));if(!isNaN(m))totalPremiado+=m} });
   document.getElementById('stat-total').textContent=totalCartones;
   document.getElementById('stat-total-premiado').textContent=totalPremiado.toLocaleString('es-PY') + " Gs";
   document.getElementById('stat-premiado-count').textContent=con+" cartones con premio"
 }
-function generateScratchLink(){
-  let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000';
-  let id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();
-  links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};
-  DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable();
-}
+function generateScratchLink(){let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000',id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable()}
 function generateSymbolMatrix(win,prize){let m=[];if(win){let ws=POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)];for(let i=0;i<3;i++)m.push({symbol:ws,amount:prize});let av=POOL_SIMBOLOS.filter(s=>s!==ws);av.sort(()=>Math.random()-.5);for(let i=0;i<6;i++){let a=av[i%av.length],fa=POOL_MONTOS.filter(x=>x!==prize),ra=fa[Math.floor(Math.random()*fa.length)];m.push({symbol:a,amount:ra})}}else{let sp=[...POOL_SIMBOLOS,...POOL_SIMBOLOS].sort(()=>Math.random()-.5),c={};for(let s of sp){if(!c[s])c[s]=0;if(c[s]<2&&m.length<9){m.push({symbol:s,amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]});c[s]++}}while(m.length<9)m.push({symbol:POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)],amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]})}return m.sort(()=>Math.random()-.5)}
 function renderLinksTable(){
-  let links=DB.getLinks(), finished=getFinished(), tbody=document.getElementById('links-table-body'),msg=document.getElementById('no-links-msg');
+  let links=DB.getLinks(), finished=getFinished(), tbody=document.getElementById('links-table-body'),msg=document.getElementById('no-links-msg');tbody.innerHTML='';
   let keys=Object.keys(links).reverse();
-  if(keys.length==0){tbody.innerHTML='';msg.classList.remove('hidden');return}else msg.classList.add('hidden');
-  let frag=document.createDocumentFragment();
+  if(keys.length==0){msg.classList.remove('hidden');return}else msg.classList.add('hidden');
   keys.forEach(k=>{
     let d=links[k], tr=document.createElement('tr'); tr.className="hover:bg-slate-900/40";
     let url=location.origin+location.pathname+'?card='+d.token;
@@ -341,9 +311,8 @@ function renderLinksTable(){
     let isUsed = d.status==='usado' || !!fin;
     let estadoHtml = isUsed ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - ${fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded font-bold">🔴 USADO - ${fin && fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Sin Premio</span>`) : `<span class="text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded">🟢 Disponible</span>`;
     tr.innerHTML=`<td class="p-3"><div class="font-bold text-white">${d.totalCards} raspadita(s) o ${d.totalCards} giro(s) Ruleta</div><div class="text-slate-500 text-[10px]">${d.createdAt} | ${badge}</div></td><td class="p-3"><input type="text" readonly value="${url}" onclick="this.select();" class="bg-slate-900 border border-slate-700/60 rounded px-2.5 py-1 text-purple-300 w-full max-w-[240px] text-xs"></td><td class="p-3 text-center">${estadoHtml}</td><td class="p-3 text-right"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">📋 Copiar</button> <button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded">✔️ Marcar Usado</button></td>`;
-    frag.appendChild(tr);
-  });
-  tbody.innerHTML=''; tbody.appendChild(frag);
+    tbody.appendChild(tr)
+  })
 }
 function marcarUsado(id){
   let links=DB.getLinks(); if(!links[id]) return;
@@ -351,21 +320,9 @@ function marcarUsado(id){
   if(!fin){ marcarUsadoEnNube(id, links[id].withPrize, links[id].prizeAmount, 'raspadita', links[id].totalCards); } else { marcarUsadoEnNube(id, fin.won, fin.prize, fin.mode||'raspadita', fin.total||links[id].totalCards); }
   links[id].status='usado'; DB.saveLinks(links); renderLinksTable();
 }
-function copyToClipboard(t,b){
-  let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();
-  let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);
-  if(ok){
-    let toast=document.getElementById('toast-copiado');
-    if(toast){
-      toast.classList.remove('hidden');
-      setTimeout(()=>{ toast.classList.add('hidden'); }, 2000);
-    }
-    let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)
-  }else prompt("Copia el enlace:",t)
-}
+function copyToClipboard(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);if(ok){let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)}else prompt("Copia el enlace:",t)}
 function loadPlayerView(token){
   let p;try{p=JSON.parse(atob(token))}catch(e){document.getElementById('error-view').classList.remove('hidden');return}
-  loadFirebaseLazy();
   consultarNube(p.id, (fin)=>{
     if(fin){ showFinishedScreen(p.id, fin.won, fin.prize, fin.mode, fin.total||p.q); return; }
     let prog = getProgress(p.id);
@@ -388,6 +345,7 @@ function loadPlayerView(token){
       if(activeCardIndex >= activeGameLink.totalCards){
         let won = activeGameLink.withPrize; marcarUsadoEnNube(activeGameLink.id, won, activeGameLink.prizeAmount, 'raspadita', activeGameLink.totalCards); showFinishedScreen(activeGameLink.id, won, activeGameLink.prizeAmount, 'raspadita', activeGameLink.totalCards); return;
       }
+      // MUESTRA EL POPUP POR ENCIMA DE TODO - el juego ya está cargado atrás
       document.getElementById('resume-banner').classList.remove('hidden');
       document.getElementById('resume-text').textContent = `Ya jugaste ${activeCardIndex} de ${activeGameLink.totalCards} raspaditas. Te faltan ${activeGameLink.totalCards-activeCardIndex}. ¡Seguí!`;
       showSelectionScreen();
@@ -427,7 +385,6 @@ function chooseModeRuleta(){
 }
 let rouletteSegments=[], rouletteAngle=0, rouletteSpinning=false, rouletteResult=null;
 let rouletteTotalSpins=1;
-let lastTickSegment=-1;
 function buildRouletteSegments(){
   let prize = activeGameLink.prizeAmount;
   let allAmounts = ['5.000','10.000','20.000','30.000','50.000','100.000','200.000','300.000','500.000','1.000.000','2.000.000','3.000.000','4.000.000','5.000.000'];
@@ -457,10 +414,6 @@ function drawRoulette(){
     ctx.fillText(s.label, R-8, 3); ctx.restore();
   });
   ctx.beginPath(); ctx.arc(cx,cy,R-1,0,Math.PI*2); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=4; ctx.stroke();
-  if(rouletteSpinning){
-    let currentSeg = Math.floor(((rouletteAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2) / segAngle);
-    if(currentSeg!==lastTickSegment){ lastTickSegment=currentSeg; AudioEngine.playTick(); }
-  }
 }
 function updateRouletteCounter(){
   document.getElementById('roulette-counter').textContent = `${rouletteCurrentSpin} de ${rouletteTotalSpins} giros disponibles`;
@@ -496,8 +449,7 @@ function setupRouletteResume(){
 function spinRoulette(){
   if(rouletteSpinning) return;
   if(rouletteCurrentSpin >= rouletteTotalSpins) return;
-  AudioEngine.init();
-  rouletteSpinning=true; lastTickSegment=-1;
+  rouletteSpinning=true;
   document.getElementById('btn-spin').disabled=true; document.getElementById('btn-spin').textContent='Girando... 🎡';
   document.getElementById('roulette-next-wrapper').classList.add('hidden');
   document.getElementById('roulette-finish-wrapper').classList.add('hidden');
