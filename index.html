@@ -22,6 +22,7 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 .wheel-pointer{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fde68a;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 .wheel-pointer::after{content:'';position:absolute;top:-28px;left:-5px;width:10px;height:10px;background:#451a03;border-radius:9999px}
 .link-card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:14px;margin-bottom:12px}
+button:active{transform:scale(.97)}
 </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -63,11 +64,11 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <button type="button" id="btn-type-noprize" onclick="setPrizeType(false)" class="py-2.5 px-4 rounded-lg font-semibold text-sm transition border bg-slate-900 border-slate-700 text-slate-400">❌ Sin Premio</button>
 </div></div>
 <div id="wrapper-prize-amount"><label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Monto del Premio</label>
-<select id="prize-amount" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-bold"><option value="5.000">5.000 Gs</option><option value="10.000" selected>10.000 Gs</option><option value="20.000">20.000 Gs</option><option value="30.000">30.000 Gs</option><option value="50.000">50.000 Gs</option><option value="100.000">100.000 Gs</option><option value="200.000">200.000 Gs</option><option value="300.000">300.000 Gs</option><option value="500.000">500.000 Gs</option><option value="1.000.000">1.000.000 Gs</option><option value="2.000.000">2.000.000 Gs</option><option value="3.000.000">3.000.000 Gs</option><option value="5.000.000">5.000.000 Gs</option></select></div>
+<select id="prize-amount" onchange="AudioEngine.playClick()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-bold"><option value="5.000">5.000 Gs</option><option value="10.000" selected>10.000 Gs</option><option value="20.000">20.000 Gs</option><option value="30.000">30.000 Gs</option><option value="50.000">50.000 Gs</option><option value="100.000">100.000 Gs</option><option value="200.000">200.000 Gs</option><option value="300.000">300.000 Gs</option><option value="500.000">500.000 Gs</option><option value="1.000.000">1.000.000 Gs</option><option value="2.000.000">2.000.000 Gs</option><option value="3.000.000">3.000.000 Gs</option><option value="5.000.000">5.000.000 Gs</option></select></div>
 <div><label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Cantidad (Max 10) - Raspaditas o Giros de Ruleta</label>
 <div class="flex items-center gap-3"><input type="range" id="card-quantity" min="1" max="10" value="1" oninput="updateQtyLabel(this.value)" class="w-full accent-purple-500"><span id="qty-label" class="bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 px-3 py-1 rounded-md text-sm min-w-[36px] text-center">1</span></div>
 <p class="text-[11px] text-slate-500 mt-1">Si elegís 3, el jugador tiene 3 raspaditas O 3 giros de ruleta.</p></div>
-<button onclick="generateScratchLink()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg">🚀 Crear Enlace Único</button>
+<button id="btn-generate" onclick="generateScratchLink()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg">🚀 Crear Enlace Único</button>
 </div></div>
 <div class="lg:col-span-2 flex flex-col"><h2 class="text-lg font-bold text-white mb-4">🔗 Enlaces Activos Creados</h2>
 <div id="links-list" class="flex-grow max-h-[420px] overflow-y-auto pr-1"></div>
@@ -160,7 +161,8 @@ body{font-family:'Poppins',sans-serif;background-color:#0f0c1b;color:#f3f4f6}
 <p id="finished-code" class="text-[11px] text-slate-500 mt-4 font-mono"></p>
 </div>
 
-<div id="toast-copiado" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white font-black px-6 py-4 rounded-2xl shadow-2xl z-[200] hidden text-center">✅ Enlace copiado<br><span class="text-xs font-normal">Ya podés pegarlo en WhatsApp</span></div>
+<div id="toast-copiado" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white font-black px-6 py-4 rounded-2xl shadow-2xl z-[200] hidden text-center text-lg">✅ Enlace copiado</div>
+<div id="toast-generado" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-slate-950 font-black px-8 py-5 rounded-2xl shadow-2xl z-[201] hidden text-center text-2xl">✅ ¡Listo!</div>
 
 </main>
 <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none w-full h-full z-50 hidden"></canvas>
@@ -171,6 +173,7 @@ const ADMIN_USER = "raspaditas19";
 const ADMIN_PASS = "190419";
 function isAdminLogged(){ return localStorage.getItem('raspadita_admin_session')==='ok'; }
 function doLogin(){
+  AudioEngine.playClick();
   let u = document.getElementById('login-user').value.trim();
   let p = document.getElementById('login-pass').value;
   if(u===ADMIN_USER && p===ADMIN_PASS){
@@ -181,6 +184,7 @@ function doLogin(){
   } else { document.getElementById('login-error').classList.remove('hidden'); }
 }
 function doLogout(){
+  AudioEngine.playClick();
   localStorage.removeItem('raspadita_admin_session');
   sessionStorage.removeItem('raspadita_admin_session');
   document.getElementById('admin-view').classList.add('hidden');
@@ -191,13 +195,19 @@ function doLogout(){
 const firebaseConfig = { apiKey: "AIzaSyAxW-J1Rn70S4Bv5cVWtY5h7peSJ3Uo8V8", authDomain: "raspadita-online.firebaseapp.com", databaseURL: "https://raspadita-online-default-rtdb.firebaseio.com", projectId: "raspadita-online", storageBucket: "raspadita-online.firebasestorage.app", messagingSenderId: "930757147695", appId: "1:930757147695:web:d4cd3f1713f215042a9ada" };
 let dbFirebase = null;
 try{ firebase.initializeApp(firebaseConfig); dbFirebase = firebase.database(); }catch(e){ console.log("Firebase no configurado", e); }
-const AudioEngine={ctx:null,init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()},
-playTick(){this.init(); try{ let o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type='square'; o.frequency.setValueAtTime(1400,this.ctx.currentTime); g.gain.setValueAtTime(.05,this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.04); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+.05); }catch(e){} },
-playScratch(){this.init();let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
-playSelect(){this.init();let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)},
-playWinFanfare(){this.init();let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})},
-playLoseSound(){this.init();let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.15,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}};
-const DB={getLinks(){let l=localStorage.getItem('scratch_links_v2');return l?JSON.parse(l):{}},saveLinks(l){localStorage.setItem('scratch_links_v2',JSON.stringify(l))},getStats(){let s=localStorage.getItem('scratch_stats_v2');return s?JSON.parse(s):{withPrize:0,withoutPrize:0}},saveStats(s){localStorage.setItem('scratch_stats_v2',JSON.stringify(s))}};
+// === AUDIO PANEL + JUEGO ===
+const AudioEngine={ctx:null,init(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}} if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();},
+playClick(){this.init(); if(!this.ctx)return; try{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(800,this.ctx.currentTime);g.gain.setValueAtTime(.08,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.07);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.08);}catch(e){}},
+playSuccess(){this.init(); if(!this.ctx)return; try{[523,784,1046].forEach((f,i)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(f,this.ctx.currentTime+i*.09);g.gain.setValueAtTime(.12,this.ctx.currentTime+i*.09);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+i*.09+.25);o.connect(g);g.connect(this.ctx.destination);o.start(this.ctx.currentTime+i*.09);o.stop(this.ctx.currentTime+i*.09+.25);});}catch(e){}},
+playTick(){this.init(); if(!this.ctx)return; try{ let o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type='square'; o.frequency.setValueAtTime(1400,this.ctx.currentTime); g.gain.setValueAtTime(.05,this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.04); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+.05); }catch(e){} },
+playScratch(){this.init(); if(!this.ctx)return; let b=this.ctx.createBuffer(1,this.ctx.sampleRate*.05,this.ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;let n=this.ctx.createBufferSource();n.buffer=b;let f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1000;let g=this.ctx.createGain();g.gain.setValueAtTime(.06,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.05);n.connect(f);f.connect(g);g.connect(this.ctx.destination);n.start()},
+playSelect(){this.init(); if(!this.ctx)return; let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(600,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(300,this.ctx.currentTime+.1);g.gain.setValueAtTime(.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+.1);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.1)},
+playWinFanfare(){this.init(); if(!this.ctx)return; let now=this.ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((fr,ix)=>{let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(fr,now+ix*.1);g.gain.setValueAtTime(.12,now+ix*.1);g.gain.exponentialRampToValueAtTime(.01,now+ix*.1+.4);o.connect(g);g.connect(this.ctx.destination);o.start(now+ix*.1);o.stop(now+ix*.1+.4)})},
+playLoseSound(){this.init(); if(!this.ctx)return; let now=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.linearRampToValueAtTime(110,now+.4);g.gain.setValueAtTime(.12,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(now+.4)}};
+// === TOASTS ===
+function showToastCopiado(){let t=document.getElementById('toast-copiado');t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),1800);}
+function showToastGenerado(){let t=document.getElementById('toast-generado');t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2000);}
+const DB={getLinks(){try{let l=localStorage.getItem('scratch_links_v2');return l?JSON.parse(l):{}}catch(e){return{}}},saveLinks(l){localStorage.setItem('scratch_links_v2',JSON.stringify(l))},getStats(){let s=localStorage.getItem('scratch_stats_v2');return s?JSON.parse(s):{withPrize:0,withoutPrize:0}},saveStats(s){localStorage.setItem('scratch_stats_v2',JSON.stringify(s))}};
 function getFinished(){try{return JSON.parse(localStorage.getItem('scratch_finished_v2')||'{}')}catch(e){return{}}}
 function saveFinished(id, data){let f=getFinished(); f[id]=data; localStorage.setItem('scratch_finished_v2', JSON.stringify(f));}
 function getProgressAll(){ try{ return JSON.parse(localStorage.getItem('scratch_progress_v3')||'{}'); }catch(e){ return {}; } }
@@ -207,11 +217,11 @@ function saveProgress(){
   let all = getProgressAll();
   all[activeGameLink.id] = { id: activeGameLink.id, mode: currentMode, cardIndex: activeCardIndex, rouletteCurrentSpin: rouletteCurrentSpin, rouletteWinSpinIndex: rouletteWinSpinIndex, rouletteAlreadyWon: rouletteAlreadyWon, cards: activeGameLink.cards, finished: false, updatedAt: new Date().toISOString() };
   localStorage.setItem('scratch_progress_v3', JSON.stringify(all));
-  if(dbFirebase){ dbFirebase.ref('raspaditas_progreso/' + activeGameLink.id).set(all[activeGameLink.id]); }
+  if(dbFirebase){ try{dbFirebase.ref('raspaditas_progreso/' + activeGameLink.id).set(all[activeGameLink.id]);}catch(e){} }
 }
 function clearProgress(id){
   let all = getProgressAll(); delete all[id]; localStorage.setItem('scratch_progress_v3', JSON.stringify(all));
-  if(dbFirebase){ dbFirebase.ref('raspaditas_progreso/' + id).remove(); }
+  if(dbFirebase){ try{dbFirebase.ref('raspaditas_progreso/' + id).remove();}catch(e){} }
 }
 function closeResumeBanner(){
   AudioEngine.playSelect();
@@ -254,7 +264,7 @@ function marcarUsadoEnNube(id, won, prize, mode, total){
   let m = mode || currentMode || 'raspadita';
   let tot = total || (activeGameLink ? activeGameLink.totalCards : 1);
   saveFinished(id, {won:won, prize:prize, mode:m, total:tot});
-  if(dbFirebase){ dbFirebase.ref('raspaditas_usadas/' + id).set({won:won, prize:prize, mode:m, total:tot, at: new Date().toISOString()}); }
+  if(dbFirebase){ try{dbFirebase.ref('raspaditas_usadas/' + id).set({won:won, prize:prize, mode:m, total:tot, at: new Date().toISOString()});}catch(e){} }
   let links=DB.getLinks();
   if(links[id]){ links[id].status='usado'; DB.saveLinks(links); }
   clearProgress(id);
@@ -271,12 +281,14 @@ function consultarNube(id, callback){
 }
 let currentGenerationTypeWithPrize=true,selectedCartonIndex=null,activeGameLink=null,activeCardIndex=0,isScratchingFinished=false,scratchCanvas=document.getElementById('scratch-canvas'),scratchCtx=scratchCanvas?scratchCanvas.getContext('2d'):null,isDrawing=false,lastX=0,lastY=0;
 let currentMode=null;
+let isGenerating=false, isRendering=false, renderPending=false;
 const POOL_SIMBOLOS=['🐶','🐱','🦁','🐯','🐼','🐻','🦊','🐰','🐵'],POOL_MONTOS=['5.000','10.000','20.000','50.000','100.000','500.000','1.000.000','3.000.000','5.000.000'];
 window.onload=function(){let p=new URLSearchParams(location.search),t=p.get('card');if(t)loadPlayerView(t);else if(isAdminLogged() || sessionStorage.getItem('raspadita_admin_session')==='ok') loadAdminView(); else {document.getElementById('login-view').classList.remove('hidden');document.getElementById('login-user').value='';document.getElementById('login-pass').value='';}};
 function loadAdminView(){
   document.getElementById('admin-view').classList.remove('hidden');updateAdminStatsDisplay();renderLinksTable();
+  // ARREGLO CONGELAMIENTO: ya no escuchamos todo el tiempo, solo una vez al entrar
   if(dbFirebase){
-    dbFirebase.ref('raspaditas_usadas').on('value', snap=>{
+    dbFirebase.ref('raspaditas_usadas').once('value').then(snap=>{
       let data = snap.val()||{};
       let links = DB.getLinks();
       let cambio=false;
@@ -284,13 +296,14 @@ function loadAdminView(){
         if(links[id] && links[id].status!=='usado'){ links[id].status='usado'; cambio=true; }
         saveFinished(id, data[id]);
       });
-      if(cambio){ DB.saveLinks(links); renderLinksTable(); }
-      else renderLinksTable();
-    });
+      if(cambio){ DB.saveLinks(links); updateAdminStatsDisplay(); renderLinksTable(); }
+    }).catch(()=>{});
   }
 }
-function setPrizeType(h){currentGenerationTypeWithPrize=h;let b1=document.getElementById('btn-type-prize'),b2=document.getElementById('btn-type-noprize'),w=document.getElementById('wrapper-prize-amount');if(h){b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-amber-500/20 border-amber-500 text-amber-300";b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.remove('hidden')}else{b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-purple-500/20 border-purple-500 text-purple-300";b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.add('hidden')}}
-function updateQtyLabel(v){document.getElementById('qty-label').textContent=v}
+function setPrizeType(h){
+  AudioEngine.playClick();
+  currentGenerationTypeWithPrize=h;let b1=document.getElementById('btn-type-prize'),b2=document.getElementById('btn-type-noprize'),w=document.getElementById('wrapper-prize-amount');if(h){b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-amber-500/20 border-amber-500 text-amber-300";b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.remove('hidden')}else{b2.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-purple-500/20 border-purple-500 text-purple-300";b1.className="py-2.5 px-4 rounded-lg font-semibold text-sm border bg-slate-900 border-slate-700 text-slate-400";w.classList.add('hidden')}}
+function updateQtyLabel(v){document.getElementById('qty-label').textContent=v; AudioEngine.playClick();}
 function updateAdminStatsDisplay(){
   let links=DB.getLinks(),keys=Object.keys(links),totalCartones=0,totalPremiado=0,con=0;
   keys.forEach(k=>{ let l=links[k]; totalCartones += Number(l.totalCards || 1); if(l.withPrize){con++;let m=Number(String(l.prizeAmount).replace(/\./g,''));if(!isNaN(m))totalPremiado+=m} });
@@ -298,33 +311,60 @@ function updateAdminStatsDisplay(){
   document.getElementById('stat-total-premiado').textContent=totalPremiado.toLocaleString('es-PY') + " Gs";
   document.getElementById('stat-premiado-count').textContent=con+" cartones con premio"
 }
-function generateScratchLink(){let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000',id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable()}
+function generateScratchLink(){
+  if(isGenerating) return;
+  isGenerating=true;
+  let btn=document.getElementById('btn-generate'); if(btn) btn.disabled=true;
+  AudioEngine.playSuccess();
+  let qty=parseInt(document.getElementById('card-quantity').value)||1,prize=document.getElementById('prize-amount').value||'10.000',id='rc_'+Math.random().toString(36).substring(2,11),payload={id:id,w:currentGenerationTypeWithPrize,a:currentGenerationTypeWithPrize?prize:'0',q:qty},token=btoa(JSON.stringify(payload)),links=DB.getLinks();links[id]={token:token,uniqueId:id,withPrize:currentGenerationTypeWithPrize,prizeAmount:currentGenerationTypeWithPrize?prize:'0',totalCards:qty,status:'disponible',result:'',createdAt:new Date().toLocaleDateString()+' '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})};DB.saveLinks(links);let s=DB.getStats();if(currentGenerationTypeWithPrize)s.withPrize++;else s.withoutPrize++;DB.saveStats(s);updateAdminStatsDisplay();renderLinksTable();
+  showToastGenerado();
+  setTimeout(()=>{isGenerating=false; if(btn) btn.disabled=false;},400);
+}
 function generateSymbolMatrix(win,prize){let m=[];if(win){let ws=POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)];for(let i=0;i<3;i++)m.push({symbol:ws,amount:prize});let av=POOL_SIMBOLOS.filter(s=>s!==ws);av.sort(()=>Math.random()-.5);for(let i=0;i<6;i++){let a=av[i%av.length],fa=POOL_MONTOS.filter(x=>x!==prize),ra=fa[Math.floor(Math.random()*fa.length)];m.push({symbol:a,amount:ra})}}else{let sp=[...POOL_SIMBOLOS,...POOL_SIMBOLOS].sort(()=>Math.random()-.5),c={};for(let s of sp){if(!c[s])c[s]=0;if(c[s]<2&&m.length<9){m.push({symbol:s,amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]});c[s]++}}while(m.length<9)m.push({symbol:POOL_SIMBOLOS[Math.floor(Math.random()*POOL_SIMBOLOS.length)],amount:POOL_MONTOS[Math.floor(Math.random()*POOL_MONTOS.length)]})}return m.sort(()=>Math.random()-.5)}
 function renderLinksTable(){
-  let links=DB.getLinks(), finished=getFinished(), list=document.getElementById('links-list'),msg=document.getElementById('no-links-msg');
-  list.innerHTML='';
-  let keys=Object.keys(links).reverse();
-  if(keys.length==0){msg.classList.remove('hidden');return}else msg.classList.add('hidden');
-  keys.forEach(k=>{
-    let d=links[k];
-    let url=location.origin+location.pathname+'?card='+d.token;
-    let badge=d.withPrize?`<span class="text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md text-xs font-bold">🎁 Premio (${d.prizeAmount} Gs)</span>`:`<span class="text-slate-400 bg-slate-800 px-2 py-1 rounded-md text-xs font-bold">❌ Sin Premio</span>`;
-    let fin=finished[k];
-    let isUsed = d.status==='usado' || !!fin;
-    let estadoHtml = isUsed ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin && fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Sin Premio</span>`) : `<span class="text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full text-xs font-bold">🟢 Disponible</span>`;
-    let card=document.createElement('div');
-    card.className="link-card";
-    card.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="font-bold text-white text-sm">🎰 ${d.totalCards} raspadita(s) o ${d.totalCards} giro(s) Ruleta</span>${estadoHtml}</div><div class="flex flex-wrap items-center gap-2 mb-3"><span class="text-slate-500 text-xs">${d.createdAt}</span>${badge}</div><input type="text" readonly value="${url}" onclick="this.select();" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-300 text-xs mb-3"><div class="grid grid-cols-2 gap-2"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">📋 Copiar</button><button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">✔️ Marcar Usado</button></div>`;
-    list.appendChild(card);
-  })
+  if(isRendering){ renderPending=true; return; }
+  isRendering=true;
+  requestAnimationFrame(()=>{
+    try{
+      let links=DB.getLinks(), finished=getFinished(), list=document.getElementById('links-list'),msg=document.getElementById('no-links-msg');
+      let keys=Object.keys(links).reverse();
+      if(keys.length==0){msg.classList.remove('hidden'); list.innerHTML='';}
+      else{
+        msg.classList.add('hidden');
+        let frag=document.createDocumentFragment();
+        keys.forEach(k=>{
+          let d=links[k];
+          let url=location.origin+location.pathname+'?card='+d.token;
+          let badge=d.withPrize?`<span class="text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md text-xs font-bold">🎁 Premio (${d.prizeAmount} Gs)</span>`:`<span class="text-slate-400 bg-slate-800 px-2 py-1 rounded-md text-xs font-bold">❌ Sin Premio</span>`;
+          let fin=finished[k];
+          let isUsed = d.status==='usado' || !!fin;
+          let estadoHtml = isUsed ? (fin && fin.won ? `<span class="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Ganó ${fin.prize} Gs</span>` : `<span class="text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold">🔴 USADO - ${fin && fin.mode==='ruleta'?'Ruleta':'Raspadita'} - Sin Premio</span>`) : `<span class="text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full text-xs font-bold">🟢 Disponible</span>`;
+          let card=document.createElement('div');
+          card.className="link-card";
+          card.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="font-bold text-white text-sm">🎰 ${d.totalCards} raspadita(s) o ${d.totalCards} giro(s) Ruleta</span>${estadoHtml}</div><div class="flex flex-wrap items-center gap-2 mb-3"><span class="text-slate-500 text-xs">${d.createdAt}</span>${badge}</div><input type="text" readonly value="${url}" onclick="this.select();" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-300 text-xs mb-3"><div class="grid grid-cols-2 gap-2"><button onclick="copyToClipboard('${url}',this)" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">📋 Copiar</button><button onclick="marcarUsado('${k}')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-lg text-sm font-bold">✔️ Marcar Usado</button></div>`;
+          frag.appendChild(card);
+        });
+        list.innerHTML=''; list.appendChild(frag);
+      }
+    }catch(e){}
+    isRendering=false;
+    if(renderPending){ renderPending=false; renderLinksTable(); }
+  });
 }
 function marcarUsado(id){
+  AudioEngine.playClick();
   let links=DB.getLinks(); if(!links[id]) return;
   let fin=getFinished()[id];
   if(!fin){ marcarUsadoEnNube(id, links[id].withPrize, links[id].prizeAmount, 'raspadita', links[id].totalCards); } else { marcarUsadoEnNube(id, fin.won, fin.prize, fin.mode||'raspadita', fin.total||links[id].totalCards); }
   links[id].status='usado'; DB.saveLinks(links); renderLinksTable();
 }
-function copyToClipboard(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){}document.body.removeChild(e);if(ok){let toast=document.getElementById('toast-copiado');if(toast){toast.classList.remove('hidden');setTimeout(()=>{toast.classList.add('hidden');},2000);}let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,2000)}else prompt("Copia el enlace:",t)}
+function copyToClipboard(t,b){
+  AudioEngine.playSuccess();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>{showToastCopiado(); let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,1500);}).catch(()=>fallbackCopy(t,b));
+  } else fallbackCopy(t,b);
+}
+function fallbackCopy(t,b){let e=document.createElement('textarea');e.value=t;e.style.position='absolute';e.style.left='-9999px';document.body.appendChild(e);e.select();try{document.execCommand('copy');showToastCopiado();}catch(err){prompt("Copia el enlace:",t)}document.body.removeChild(e);let o=b.textContent;b.textContent="¡Copiado!";setTimeout(()=>b.textContent=o,1500);}
 function loadPlayerView(token){
   let p;try{p=JSON.parse(atob(token))}catch(e){document.getElementById('error-view').classList.remove('hidden');return}
   consultarNube(p.id, (fin)=>{
@@ -540,10 +580,11 @@ function selectCarton(ix){AudioEngine.playSelect();selectedCartonIndex=ix;for(le
 function goToScratchPhase(){if(selectedCartonIndex===null)return;AudioEngine.playSelect();document.getElementById('player-select-view').classList.add('hidden');document.getElementById('player-scratch-view').classList.remove('hidden');setupScratchCardGame()}
 function setupScratchCardGame(){isScratchingFinished=false;document.getElementById('scratch-current-status').textContent=`Raspadita ${activeCardIndex+1} de ${activeGameLink.totalCards}`;document.getElementById('scratch-percent-display').textContent="Raspado: 0%";document.getElementById('next-action-wrapper').classList.add('hidden');let cur=activeGameLink.cards[activeCardIndex],grid=document.getElementById('symbols-grid');grid.innerHTML='';cur.gridSymbols.forEach((it,ix)=>{let c=document.createElement('div');c.id=`symbol-cell-${ix}`;c.className="bg-slate-900 border border-slate-800/80 rounded-xl flex flex-col items-center justify-center p-1";c.innerHTML=`<span class="text-3xl md:text-4xl">${it.symbol}</span><span class="text-[10px] md:text-xs text-amber-400/90 font-bold mt-1">${it.amount} Gs</span>`;grid.appendChild(c)});scratchCanvas.width=scratchCanvas.offsetWidth;scratchCanvas.height=scratchCanvas.offsetHeight;scratchCtx.globalCompositeOperation='source-over';let g=scratchCtx.createLinearGradient(0,0,scratchCanvas.width,scratchCanvas.height);g.addColorStop(0,'#d97706');g.addColorStop(.5,'#f59e0b');g.addColorStop(1,'#b45309');scratchCtx.fillStyle=g;scratchCtx.fillRect(0,0,scratchCanvas.width,scratchCanvas.height);scratchCtx.font='bold 15px sans-serif';scratchCtx.fillStyle='#451a03';scratchCtx.textAlign='center';scratchCtx.textBaseline='middle';scratchCtx.fillText('RASPA TU ANIMAL DE LA SUERTE',scratchCanvas.width/2,scratchCanvas.height/2);scratchCanvas.addEventListener('mousedown',startScratching);scratchCanvas.addEventListener('mousemove',scratchAction);window.addEventListener('mouseup',stopScratching);scratchCanvas.addEventListener('touchstart',startScratching,{passive:true});scratchCanvas.addEventListener('touchmove',scratchAction,{passive:true});window.addEventListener('touchend',stopScratching)}
 function startScratching(e){if(isScratchingFinished)return;isDrawing=true;let c=getEventCoords(e);lastX=c.x;lastY=c.y}
-function scratchAction(e){if(!isDrawing||isScratchingFinished)return;let c=getEventCoords(e);scratchCtx.globalCompositeOperation='destination-out';scratchCtx.lineWidth=34;scratchCtx.lineCap='round';scratchCtx.lineJoin='round';scratchCtx.beginPath();scratchCtx.moveTo(lastX,lastY);scratchCtx.lineTo(c.x,c.y);scratchCtx.stroke();lastX=c.x;lastY=c.y;if(Math.random()<.35)AudioEngine.playScratch();checkScratchPercentage()}
+let lastCheck=0;
+function scratchAction(e){if(!isDrawing||isScratchingFinished)return;let c=getEventCoords(e);scratchCtx.globalCompositeOperation='destination-out';scratchCtx.lineWidth=34;scratchCtx.lineCap='round';scratchCtx.lineJoin='round';scratchCtx.beginPath();scratchCtx.moveTo(lastX,lastY);scratchCtx.lineTo(c.x,c.y);scratchCtx.stroke();lastX=c.x;lastY=c.y;if(Math.random()<.2)AudioEngine.playScratch();let now=Date.now(); if(now-lastCheck>250){lastCheck=now; checkScratchPercentage();}}
 function stopScratching(){isDrawing=false}
 function getEventCoords(e){let r=scratchCanvas.getBoundingClientRect(),x=e.touches?e.touches[0].clientX:e.clientX,y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top}}
-function checkScratchPercentage(){let w=scratchCanvas.width,h=scratchCanvas.height,d=scratchCtx.getImageData(0,0,w,h).data,trans=0,tot=0;for(let i=3;i<d.length;i+=80){tot++;if(d[i]==0)trans++}let p=Math.round(trans/tot*100);document.getElementById('scratch-percent-display').textContent=`Raspado: ${p}%`;if(p>=50&&!isScratchingFinished)autoRevealAll()}
+function checkScratchPercentage(){let w=scratchCanvas.width,h=scratchCanvas.height,d=scratchCtx.getImageData(0,0,w,h).data,trans=0,tot=0;for(let i=3;i<d.length;i+=160){tot++;if(d[i]==0)trans++}let p=Math.round(trans/tot*100);document.getElementById('scratch-percent-display').textContent=`Raspado: ${p}%`;if(p>=50&&!isScratchingFinished)autoRevealAll()}
 function autoRevealAll(){isScratchingFinished=true;isDrawing=false;scratchCtx.clearRect(0,0,scratchCanvas.width,scratchCanvas.height);document.getElementById('scratch-percent-display').textContent="Raspado: 100%";evaluateCardResult()}
 function evaluateCardResult(){
   let cd=activeGameLink.cards[activeCardIndex],counts={},win=null;
@@ -570,7 +611,7 @@ function advanceNextCardOrFinish(){
   if(activeCardIndex<activeGameLink.totalCards) showSelectionScreen();
   else { let won = activeGameLink.withPrize; let prize = activeGameLink.prizeAmount; marcarUsadoEnNube(activeGameLink.id, won, prize, 'raspadita', activeGameLink.totalCards); showFinishedScreen(activeGameLink.id, won, prize, 'raspadita', activeGameLink.totalCards); }
 }
-function triggerConfettiAnimation(){let c=document.getElementById('confetti-canvas');c.classList.remove('hidden');let ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let parts=[],cols=['#fbbf24','#f59e0b','#8b5cf6','#ec4899','#3b82f6'];for(let i=0;i<120;i++)parts.push({x:Math.random()*c.width,y:Math.random()*c.height-c.height,r:Math.random()*6+4,d:Math.random()*c.height,color:cols[Math.floor(Math.random()*cols.length)],tilt:0,tiltAngle:0,inc:Math.random()*.07+.02});function draw(){ctx.clearRect(0,0,c.width,c.height);parts.forEach((p,ix)=>{p.tiltAngle+=p.inc;p.y+=(Math.cos(p.d)+3+p.r/2)/2;p.x+=Math.sin(p.tiltAngle);p.tilt=Math.sin(p.tiltAngle-ix/3)*15;ctx.beginPath();ctx.lineWidth=p.r;ctx.strokeStyle=p.color;ctx.moveTo(p.x+p.tilt+p.r/2,p.y);ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/2);ctx.stroke()});parts=parts.filter(p=>p.y<=c.height);if(parts.length>0&&isScratchingFinished)requestAnimationFrame(draw);else c.classList.add('hidden')}draw()}
+function triggerConfettiAnimation(){let c=document.getElementById('confetti-canvas');c.classList.remove('hidden');let ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let parts=[],cols=['#fbbf24','#f59e0b','#8b5cf6','#ec4899','#3b82f6'];for(let i=0;i<100;i++)parts.push({x:Math.random()*c.width,y:Math.random()*c.height-c.height,r:Math.random()*6+4,d:Math.random()*c.height,color:cols[Math.floor(Math.random()*cols.length)],tilt:0,tiltAngle:0,inc:Math.random()*.07+.02});function draw(){ctx.clearRect(0,0,c.width,c.height);parts.forEach((p,ix)=>{p.tiltAngle+=p.inc;p.y+=(Math.cos(p.d)+3+p.r/2)/2;p.x+=Math.sin(p.tiltAngle);p.tilt=Math.sin(p.tiltAngle-ix/3)*15;ctx.beginPath();ctx.lineWidth=p.r;ctx.strokeStyle=p.color;ctx.moveTo(p.x+p.tilt+p.r/2,p.y);ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/2);ctx.stroke()});parts=parts.filter(p=>p.y<=c.height);if(parts.length>0)requestAnimationFrame(draw);else c.classList.add('hidden')}draw()}
 </script>
 </body>
 </html>
